@@ -7,7 +7,7 @@ const professionals = [
     id: "1",
     name: "דניאל כהן",
     expertise: "אדריכל נוף",
-    profileImage: "/avatars/daniel.jpg",
+    profileImage: "../../avatars/daniel.jpg",
     shortBio: "מומחה בתכנון חצרות וגינות עירוניות.",
     bio: "אני אדריכל נוף עם מעל 10 שנות ניסיון בתכנון גינות עירוניות ופרטיות. אני אוהב לשלב אלמנטים טבעיים עם עיצוב מודרני.",
     posts: [
@@ -20,7 +20,7 @@ const professionals = [
     id: "2",
     name: "שירה לוי",
     expertise: "אדריכל נוף",
-    profileImage: "/avatars/shira.jpg",
+    profileImage: "../../avatars/shira.jpg",
     shortBio: "אוהבת עיצוב עם צבעים טבעיים וצמחים מקומיים.",
     bio: "מאז 2012 אני עוסקת באדריכלות נוף עם דגש על קיימות וצמחייה מקומית. אני נהנית ליצור גינות אישיות ומרגשות.",
     posts: [
@@ -32,7 +32,7 @@ const professionals = [
     id: "3",
     name: "איתן בר",
     expertise: "אדריכל נוף",
-    profileImage: "/avatars/eitan.jpg",
+    profileImage: "../../avatars/eitan.jpg",
     shortBio: "מתמחה בפרויקטים כפריים עם ניחוח אישי.",
     bio: "אני מתמחה בתכנון חצרות כפריות עם אופי אישי. עבדתי עם לקוחות במושבים ובבתי נופש כדי ליצור מרחבים חמימים ונעימים.",
     posts: [
@@ -48,19 +48,6 @@ const ProfessionalSearch: React.FC = () => {
   const [selectedPro, setSelectedPro] = useState<any | null>(null);
 
   const role = searchParams.get("role");
-
-  // const handleSelect = (id: string) => {
-  //   if (!role) return;
-
-  //   const updatedTeam = (data.team || []).map((member) =>
-  //     member.role === role && !member.assigned
-  //       ? { ...member, assigned: true, memberId: id }
-  //       : member
-  //   );
-
-  //   setData({ ...data, team: updatedTeam });
-  //   navigate("/project");
-  // };
 
   return (
     <div className="max-w-3xl mx-auto p-6 text-right">

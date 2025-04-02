@@ -28,8 +28,8 @@ const AiChat: React.FC = () => {
     if (input.includes("הוסף לי עצים אדומים")) {
       addDesignOption({
         id: uuidv4(),
-        image2d: "/example-2d-red-trees.jpeg",
-        image3d: "/example-3d-red-trees.jpeg",
+        image2d: "../../example-2d-red-trees.jpeg",
+        image3d: "../../example-3d-red-trees.jpeg",
       });
 
       setMessages((prev) => [
