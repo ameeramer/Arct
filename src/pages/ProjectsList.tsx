@@ -12,9 +12,9 @@ const ProjectsList: React.FC = () => {
     location: "נתניה",
     purpose: "פארק",
     description: "פארק ילדים",
-    image: "../../example-2d-red-trees.jpeg",
+    image: "/public/example-2d-red-trees.jpeg",
     team: [
-      { role: "אדריכל נוף", name: "דניאל כהן", avatar: "/avatars/daniel.jpg" }
+      { role: "אדריכל נוף", name: "דניאל כהן", avatar: "/public/avatars/daniel.jpg" }
     ],
   };
 
@@ -26,7 +26,7 @@ const ProjectsList: React.FC = () => {
       description: project.description,
       photo: null,
       selectedDesignId: "1",
-      designOptions: [{id: "1", image2d: "../../example-2d-red-trees.jpeg", image3d: "../../example-3d-red-trees.jpeg"}],
+      designOptions: [{id: "1", image2d: "/public/example-2d-red-trees.jpeg", image3d: "/public/example-3d-red-trees.jpeg"}],
       team: project.team.map(member => ({
         role: member.role,
         assigned: true,

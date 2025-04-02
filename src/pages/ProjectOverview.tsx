@@ -82,7 +82,7 @@ const ProjectOverview: React.FC = () => {
               >
                 {!member.assigned ? (
                   <img
-                    src="../../public/avatar-placeholder-gray.png"
+                    src="/public/avatar-placeholder-gray.png"
                     alt="אנונימי"
                     className="absolute inset-0 w-full h-full object-cover opacity-50 rounded-full"
                   />
