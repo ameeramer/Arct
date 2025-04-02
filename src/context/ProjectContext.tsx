@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface DesignOption {
   id: string;
@@ -14,7 +14,7 @@ interface TeamRole {
   image?: string;
 }
 
-interface ProjectData {
+export interface ProjectData {
   size: string;
   location: string;
   purpose: string;
@@ -27,7 +27,7 @@ interface ProjectData {
 
 interface ProjectContextType {
   data: ProjectData;
-  setData: (data: ProjectData) => void;
+  setData: React.Dispatch<React.SetStateAction<ProjectData>>;
   addDesignOption: (option: DesignOption) => void;
 }
 

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useProject } from "../context/ProjectContext"; // ← Add this line
+import { useProject } from "../context/ProjectContext";
+import { ProjectData } from "../context/ProjectContext";
 import { v4 as uuidv4 } from "uuid"; // Add this line
 
 export default function GardenForm() {
@@ -10,12 +11,12 @@ export default function GardenForm() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setData((prev) => ({ ...prev, [name]: value }));
+    setData((prev: ProjectData) => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setData((prev) => ({ ...prev, photo: file }));
+    setData((prev: ProjectData) => ({ ...prev, photo: file }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {

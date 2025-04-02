@@ -3,7 +3,7 @@ import { useProject } from "../context/ProjectContext"; // ← Add this line
 import { v4 as uuidv4 } from "uuid"; // at the top
 
 const AiChat: React.FC = () => {
-  const { data, setData, addDesignOption } = useProject(); // ← Use project data
+  const { data, addDesignOption } = useProject(); // Remove setData from destructuring
 
   const [messages, setMessages] = useState([
     {

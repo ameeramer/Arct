@@ -43,7 +43,6 @@ const professionals = [
 ];
 
 const ProfessionalSearch: React.FC = () => {
-  const { data, setData } = useProject();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
