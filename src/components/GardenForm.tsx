@@ -38,8 +38,8 @@ export default function GardenForm() {
     e.preventDefault();
     addDesignOption({ 
       id: uuidv4(), 
-      image2d: "/public/example-2d.jpeg",
-      image3d: "/public/example-3d.jpeg" 
+      image2d: "/example-2d.jpeg",
+      image3d: "/example-3d.jpeg" 
     });
     navigate("/preview");
   };
