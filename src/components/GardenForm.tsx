@@ -2,10 +2,25 @@ import { useNavigate } from "react-router-dom";
 import { useProject } from "../context/ProjectContext";
 import { ProjectData } from "../context/ProjectContext";
 import { v4 as uuidv4 } from "uuid"; // Add this line
+import { useEffect } from "react";
 
 export default function GardenForm() {
   const { data, setData, addDesignOption } = useProject(); // ← Replace local state
   const navigate = useNavigate();
+
+  // set data to empty only at the first render
+  useEffect(() => {
+    setData({
+      size: "",
+      location: "",
+      purpose: "",
+      description: "",
+      photo: null,
+    selectedDesignId: null,
+    designOptions: [],
+      team: [],
+    });
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
