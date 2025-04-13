@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import logo from '/assets/arct-logo.svg';
+import mockAI from '/assets/mock-ai-image.jpeg';
+import mockAI2 from '/assets/mock-ai-image-2.jpeg';
 
-const mockAIPath = '/src/assets/mock-ai-image.jpeg';
-const mockAI2Path = '/src/assets/mock-ai-image-2.jpeg';
 const mockUserUploadPath = '/src/assets/mock-user-upload.jpeg';
 
-import { createProject, updateProject, getProject } from '../../services/projects';
+import { createProject, updateProject, getProject, Design } from '../../services/projects';
 import { auth } from '../../services/firebase';
+import { uploadImage } from '../../services/storage'; // Assuming uploadImage is exported from storage service
 
 type Message = {
   id: number;
@@ -84,7 +85,7 @@ export default function ChatPage() {
         const secondMockImage: Message = {
           id: updatedMessages.length + 2,
           sender: 'assistant',
-          image: mockAI2Path,
+          image: mockAI2,
           text: '[updated-design]',
         };
         updatedMessages.push(aiFollowup, secondMockImage);
@@ -157,18 +158,26 @@ export default function ChatPage() {
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
           <div className="flex flex-col items-start">
-            <img src={mockAIPath} alt="Design suggestion" className="rounded-xl max-w-xs" />
+            <img src={mockAI} alt="Design suggestion" className="rounded-xl max-w-xs" />
             <button
               onClick={async () => {
                 if (!projectId) return;
                 const existing = await getProject(projectId);
                 if (!existing) return;
-                const isSaved = savedAI1;
-                const updatedDesigns = isSaved
-                  ? existing.designs.filter((d) => d !== mockAIPath)
-                  : [...existing.designs, mockAIPath];
-                await updateProject({ ...existing, designs: updatedDesigns });
-                setSavedAI1(!isSaved);
+                const res = await fetch(mockAI);
+                const blob = await res.blob();
+                const file = new File([blob], `design-${Date.now()}.jpg`, { type: blob.type });
+                const url = await uploadImage(file, file.name);
+                const id = 'design-1';
+                const existingIndex = existing.designs.findIndex((d) => d.id === id);
+                let updatedDesigns;
+                if (existingIndex >= 0) {
+                  updatedDesigns = existing.designs.filter((d) => d.id !== id);
+                } else {
+                  updatedDesigns = [...existing.designs, { id, url, type: 'mockAI' }];
+                }
+                await updateProject({ ...existing, designs: updatedDesigns as Design[] });
+                existingIndex >= 0 ? setSavedAI1(false) : setSavedAI1(true);
               }}
               className={`mt-2 flex items-center text-sm ${
                 savedAI1 ? 'font-bold' : ''
@@ -206,18 +215,26 @@ export default function ChatPage() {
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
           <div className="flex flex-col items-start">
-            <img src={mockAI2Path} alt="Design suggestion 2" className="rounded-xl max-w-xs" />
+            <img src={mockAI2} alt="Design suggestion 2" className="rounded-xl max-w-xs" />
             <button
               onClick={async () => {
                 if (!projectId) return;
                 const existing = await getProject(projectId);
                 if (!existing) return;
-                const isSaved = savedAI2;
-                const updatedDesigns = isSaved
-                  ? existing.designs.filter((d) => d !== mockAI2Path)
-                  : [...existing.designs, mockAI2Path];
-                await updateProject({ ...existing, designs: updatedDesigns });
-                setSavedAI2(!isSaved);
+                const res = await fetch(mockAI2);
+                const blob = await res.blob();
+                const file = new File([blob], `design-${Date.now()}.jpg`, { type: blob.type });
+                const url = await uploadImage(file, file.name);
+                const id = 'design-2';
+                const existingIndex = existing.designs.findIndex((d) => d.id === id);
+                let updatedDesigns;
+                if (existingIndex >= 0) {
+                  updatedDesigns = existing.designs.filter((d) => d.id !== id);
+                } else {
+                  updatedDesigns = [...existing.designs, { id, url, type: 'mockAI' }];
+                }
+                await updateProject({ ...existing, designs: updatedDesigns as Design[] });
+                existingIndex >= 0 ? setSavedAI2(false) : setSavedAI2(true);
               }}
               className={`mt-2 flex items-center text-sm ${
                 savedAI2 ? 'font-bold' : ''

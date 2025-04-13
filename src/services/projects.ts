@@ -1,6 +1,12 @@
 import { collection, getDocs, query, where, addDoc, getDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
+export type Design = {
+  id: string;
+  url: string;
+  type: 'ai' | 'user' | 'mockAI';
+};
+
 export type Update = {
   id: string;
   timestamp: number;
@@ -12,7 +18,7 @@ export type Project = {
   id: string;
   title: string;
   updates: Update[];
-  designs: string[];
+  designs: Design[];
 };
 
 export async function getUserProjects(userId: string): Promise<Project[]> {

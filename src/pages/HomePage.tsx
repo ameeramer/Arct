@@ -35,7 +35,7 @@ export default function HomePage() {
                 className="bg-white rounded-xl overflow-hidden shadow-sm"
               >
                 <img
-                  src={project.designs?.[project.designs.length - 1] || '/placeholder.jpg'}
+                  src={project.designs?.[project.designs.length - 1]?.url || '/placeholder.jpg'}
                   alt={project.title}
                   className="w-full h-36 object-cover"
                 />
