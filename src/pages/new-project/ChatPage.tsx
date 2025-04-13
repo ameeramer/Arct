@@ -108,27 +108,27 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-gray-100 text-gray-800">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-gray-100 text-gray-800">
             Hi! I’m Arct, your personal design assistant.
           </div>
         </div>
 
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-gray-100 text-gray-800">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-gray-100 text-gray-800">
             Let’s get started — I’ll ask a few quick questions to understand your vision.
           </div>
         </div>
 
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-gray-100 text-gray-800">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-gray-100 text-gray-800">
             Please describe your general idea.
           </div>
         </div>
 
         <div className="flex justify-end items-start">
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-black text-white">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-black text-white">
             I’m imagining a lush tropical garden with tall palm trees, free-flowing paths, and a natural pool surrounded by stones and aquatic plants.
           </div>
           <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" className="w-8 h-8 rounded-full ml-3" />
@@ -136,7 +136,7 @@ export default function ChatPage() {
 
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-gray-100 text-gray-800">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-gray-100 text-gray-800">
             Thanks for sharing your idea! To help bring it to life, could you upload a photo of the area you’d like to design?
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function ChatPage() {
 
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-gray-100 text-gray-800">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-gray-100 text-gray-800">
             Here is a design suggestion based on your idea:
           </div>
         </div>
@@ -179,9 +179,7 @@ export default function ChatPage() {
                 await updateProject({ ...existing, designs: updatedDesigns as Design[] });
                 existingIndex >= 0 ? setSavedAI1(false) : setSavedAI1(true);
               }}
-              className={`mt-2 flex items-center text-sm ${
-                savedAI1 ? 'font-bold' : ''
-              } text-black rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-100 transition`}
+              className={`mt-2 flex items-center text-base sm:text-sm ${savedAI1 ? 'font-bold' : ''} text-black rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-100 transition`}
             >
               <svg
                 className={`w-4 h-4 mr-1 ${
@@ -199,7 +197,7 @@ export default function ChatPage() {
         </div>
 
         <div className="flex justify-end items-start">
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-black text-white">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-black text-white">
             Add a cozy seating area with lounge chairs on the left side of the path, and place low garden lights along the path for ambiance.
           </div>
           <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" className="w-8 h-8 rounded-full ml-3" />
@@ -207,7 +205,7 @@ export default function ChatPage() {
 
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
-          <div className="max-w-xs px-4 py-2 rounded-2xl text-sm bg-gray-100 text-gray-800">
+          <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-gray-100 text-gray-800">
             Sure, what do you think about this?
           </div>
         </div>
@@ -236,9 +234,7 @@ export default function ChatPage() {
                 await updateProject({ ...existing, designs: updatedDesigns as Design[] });
                 existingIndex >= 0 ? setSavedAI2(false) : setSavedAI2(true);
               }}
-              className={`mt-2 flex items-center text-sm ${
-                savedAI2 ? 'font-bold' : ''
-              } text-black rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-100 transition`}
+              className={`mt-2 flex items-center text-base sm:text-sm ${savedAI2 ? 'font-bold' : ''} text-black rounded-full border border-gray-300 px-3 py-1 hover:bg-gray-100 transition`}
             >
               <svg
                 className={`w-4 h-4 mr-1 ${
@@ -263,9 +259,9 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-4 py-2 border rounded-full focus:outline-none"
+            className="flex-1 px-4 py-2 border rounded-full focus:outline-none text-base sm:text-sm"
           />
-          <button onClick={handleSend} className="p-2 bg-black text-white rounded-full">
+          <button onClick={handleSend} className="p-2 bg-black text-white rounded-full text-base sm:text-sm">
             <PaperAirplaneIcon className="h-5 w-5 rotate-45" />
           </button>
         </div>

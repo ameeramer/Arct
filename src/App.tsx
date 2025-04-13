@@ -25,13 +25,13 @@ export default function App() {
 
   return (
     <Router>
-      <div className="p-4 flex justify-between items-center bg-gray-100">
+      <div className="px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center bg-gray-100">
         {user && (
-          <div className="text-sm text-gray-700">
+          <div className="text-sm sm:text-base text-gray-700">
             Signed in as <strong>{user.email}</strong>
             <button
               onClick={() => signOut(auth)}
-              className="ml-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+              className="ml-4 px-3 py-1 sm:px-4 sm:py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm sm:text-base"
             >
               Logout
             </button>
@@ -51,22 +51,22 @@ export default function App() {
         <Route path="/new-project/greeting" element={<NewProjectGreeting />} />
         <Route path="/new-project/chat" element={<NewProjectChat />} />
       </Routes>
-      <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 z-50">
+      <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 sm:py-4 z-50">
         {user && (
           <>
             <button className="text-gray-700">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
             <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
-              <PlusIcon className="h-6 w-6 text-black" />
+              <PlusIcon className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
             </Link>
             <button className="text-gray-700">
               <img
                 src="https://randomuser.me/api/portraits/women/44.jpg"
                 alt="Profile"
-                className="h-6 w-6 rounded-full object-cover"
+                className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover"
               />
             </button>
           </>

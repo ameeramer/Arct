@@ -22,10 +22,10 @@ export default function HomePage() {
   
   return (
     <div className="pb-[130px] min-h-screen bg-[#f9f9f9] flex flex-col justify-between">
-      <div className="p-4">
-        <h2 className="text-2xl font-semibold mb-4">Projects</h2>
+      <div className="px-4 py-3 sm:px-6 sm:py-4">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-4">Projects</h2>
         
-        <div className="grid gap-4 grid-cols-2 ">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
           {loading ? (
             <p className="text-gray-500">Loading projects...</p>
           ) : (
@@ -41,7 +41,7 @@ export default function HomePage() {
                   className="w-full object-cover"
                 />
                 <div className="p-3">
-                  <div className="font-semibold text-2xl">{project.title}</div>
+                  <div className="font-semibold text-lg sm:text-xl">{project.title}</div>
                   {project.updates?.length > 0 && (
                     <div className="text-sm text-gray-500">{project.updates.length} new update{project.updates.length > 1 ? 's' : ''}</div>
                   )}
@@ -58,8 +58,6 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
-
-
     </div>
   );
 }
