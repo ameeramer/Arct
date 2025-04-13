@@ -51,7 +51,7 @@ export default function App() {
         <Route path="/new-project/greeting" element={<NewProjectGreeting />} />
         <Route path="/new-project/chat" element={<NewProjectChat />} />
       </Routes>
-      <div className="border-t border-gray-200 bg-white flex justify-around py-3">
+      <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 z-50">
         <button className="text-gray-700">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
