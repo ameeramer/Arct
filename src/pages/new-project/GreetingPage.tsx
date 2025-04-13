@@ -7,7 +7,7 @@ export default function GreetingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="pb-[130px] flex flex-col items-center justify-center h-screen px-4 sm:px-6 text-center relative">
+    <div className="pb-40 flex flex-col items-center justify-center h-screen px-4 sm:px-6 text-center relative">
       <button
         className="absolute left-4 top-4 p-2"
         onClick={() => navigate(-1)}
