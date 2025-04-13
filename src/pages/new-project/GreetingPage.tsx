@@ -9,7 +9,9 @@ export default function GreetingPage() {
   return (
     <div className="pb-60 sm:pb-40 min-h-screen bg-white flex flex-col justify-between">
       <div className="px-4 py-3 sm:px-6 sm:py-4">
-        <button onClick={() => navigate(-1)} className="text-xl sm:text-2xl">←</button>
+        <button onClick={() => navigate(-1)} className="text-xl sm:text-2xl">
+          <ArrowLeftIcon className="w-6 h-6" />
+        </button>
       </div>
 
       <div className="flex flex-col items-center justify-center px-6 text-center">
