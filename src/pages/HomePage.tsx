@@ -25,7 +25,7 @@ export default function HomePage() {
       <div className="p-4">
         <h2 className="text-2xl font-semibold mb-4">Projects</h2>
         
-        <div className="grid gap-4 grid-cols-[repeat(auto-fit,220px)]">
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,3cm)]">
           {loading ? (
             <p className="text-gray-500">Loading projects...</p>
           ) : (
