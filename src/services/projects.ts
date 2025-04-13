@@ -19,6 +19,8 @@ export type Project = {
   title: string;
   updates: Update[];
   designs: Design[];
+  description: string;
+  team: string[];
 };
 
 export async function getUserProjects(userId: string): Promise<Project[]> {
@@ -65,3 +67,20 @@ export async function addUpdateToProject(projectId: string, update: Update): Pro
 
   await setDoc(docRef, updatedProject);
 }
+
+export async function addUserToProjectTeam(projectId: string, userId: string): Promise<void> {
+  const docRef = doc(collection(db, 'projects'), projectId);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return;
+
+  const projectData = docSnap.data() as Project;
+  const updatedProject: Project = {
+    ...projectData,
+    id: projectId,
+    team: [...projectData.team, userId],
+  };
+
+  await setDoc(docRef, updatedProject);
+}
+
+

@@ -1,12 +1,15 @@
 import { PlusIcon } from '@heroicons/react/24/solid';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from '../services/firebase';
 import { getUserProjects, Project } from '../services/projects';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 export default function HomePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -18,6 +21,20 @@ export default function HomePage() {
       setLoading(false);
     };
     fetchProjects();
+  }, []);
+  
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const ref = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          navigate('/complete-signup');
+        }
+      }
+    };
+    checkUserProfile();
   }, []);
   
   return (
@@ -32,7 +49,7 @@ export default function HomePage() {
             projects.map((project) => (
               <Link
                 key={project.id}
-                to={`/projects/${project.id}`}
+                to={`/project/${project.id}`}
                 className="bg-white rounded-xl overflow-hidden shadow-sm"
               >
                 <img

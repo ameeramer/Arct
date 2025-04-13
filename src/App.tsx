@@ -2,16 +2,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-ro
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from './services/firebase';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import NewProjectPage from './pages/new-project/StartPage';
 import NewProjectGreeting from './pages/new-project/GreetingPage';
 import NewProjectChat from './pages/new-project/ChatPage';
+import ProjectPage from './pages/ProjectPage';
 import { PlusIcon } from '@heroicons/react/24/solid';
+import CompleteSignupPage from './pages/CompleteSignupPage';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -20,6 +25,17 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const ref = doc(db, 'users', user.uid);
+      getDoc(ref).then((snap) => {
+        if (snap.exists()) {
+          setAvatarUrl(snap.data().avatar);
+        }
+      });
+    }
+  }, [user]);
 
   if (loading) return <div className="p-4">Loading...</div>;
 
@@ -50,6 +66,8 @@ export default function App() {
         <Route path="/new-project" element={<NewProjectPage />} />
         <Route path="/new-project/greeting" element={<NewProjectGreeting />} />
         <Route path="/new-project/chat" element={<NewProjectChat />} />
+        <Route path="/project/:id" element={<ProjectPage />} />
+        <Route path="/complete-signup" element={<CompleteSignupPage />} />
       </Routes>
       <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 sm:py-4 z-50">
         {user && (
@@ -64,7 +82,7 @@ export default function App() {
             </Link>
             <button className="text-gray-700">
               <img
-                src="https://randomuser.me/api/portraits/women/44.jpg"
+                src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
                 alt="Profile"
                 className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover"
               />

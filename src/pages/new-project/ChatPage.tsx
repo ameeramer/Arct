@@ -4,11 +4,13 @@ import logo from '/assets/arct-logo.svg';
 import mockAI from '/assets/mock-ai-image.jpeg';
 import mockAI2 from '/assets/mock-ai-image-2.jpeg';
 
-const mockUserUploadPath = '/src/assets/mock-user-upload.jpeg';
+const mockUserUploadPath = '/assets/mock-user-upload.jpeg';
 
 import { createProject, updateProject, getProject, Design } from '../../services/projects';
-import { auth } from '../../services/firebase';
+import { auth, db } from '../../services/firebase';
 import { uploadImage } from '../../services/storage'; // Assuming uploadImage is exported from storage service
+import { doc } from 'firebase/firestore';
+import { getDoc } from 'firebase/firestore';
 
 type Message = {
   id: number;
@@ -25,7 +27,19 @@ export default function ChatPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [savedAI1, setSavedAI1] = useState(false);
   const [savedAI2, setSavedAI2] = useState(false);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const hasCreatedProject = useRef(false);
+
+  useEffect(() => {
+    if (auth.currentUser) {
+      const ref = doc(db, 'users', auth.currentUser.uid);
+      getDoc(ref).then((snap) => {
+        if (snap.exists()) {
+          setUserAvatarUrl(snap.data().avatar);
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const createInitialProject = async () => {
@@ -35,9 +49,11 @@ export default function ChatPage() {
       console.log('createInitialProject (once)');
       const project = {
         title: 'Tropical Garden',
+        description: 'A lush tropical garden with tall palm trees, free-flowing paths, and a natural pool surrounded by stones and aquatic plants.',
         updates: [],
         designs: [],
         userId: auth.currentUser?.uid || 'guest',
+        team: [],
       };
       const id = await createProject(project);
       setProjectId(id);
@@ -131,7 +147,11 @@ export default function ChatPage() {
           <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-black text-white">
             I’m imagining a lush tropical garden with tall palm trees, free-flowing paths, and a natural pool surrounded by stones and aquatic plants.
           </div>
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" className="w-8 h-8 rounded-full ml-3" />
+          <img
+            src={userAvatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
+            alt="User"
+            className="w-8 h-8 rounded-full ml-3"
+          />
         </div>
 
         <div className="flex items-start">
@@ -145,7 +165,11 @@ export default function ChatPage() {
           <div className="flex flex-col items-end">
             <img src={mockUserUploadPath} alt="User upload" className="rounded-xl max-w-xs" />
           </div>
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" className="w-8 h-8 rounded-full ml-3" />
+          <img
+            src={userAvatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
+            alt="User"
+            className="w-8 h-8 rounded-full ml-3"
+          />
         </div>
 
         <div className="flex items-start">
@@ -200,7 +224,11 @@ export default function ChatPage() {
           <div className="max-w-xs px-4 py-2 rounded-2xl text-base sm:text-sm bg-black text-white">
             Add a cozy seating area with lounge chairs on the left side of the path, and place low garden lights along the path for ambiance.
           </div>
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" className="w-8 h-8 rounded-full ml-3" />
+          <img
+            src={userAvatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
+            alt="User"
+            className="w-8 h-8 rounded-full ml-3"
+          />
         </div>
 
         <div className="flex items-start">
