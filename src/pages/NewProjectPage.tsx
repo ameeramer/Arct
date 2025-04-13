@@ -25,6 +25,7 @@ export default function NewProjectPage() {
         imageUrl,
         updates: [],
         userId: user.uid,
+        designs: []
       };
       const id = await createProject(newProject);
       navigate(`/projects/${id}`);
