@@ -21,7 +21,7 @@ export default function HomePage() {
   }, []);
   
   return (
-    <div className="min-h-screen bg-[#f9f9f9] flex flex-col justify-between">
+    <div className="pb-[130px] min-h-screen bg-[#f9f9f9] flex flex-col justify-between">
       <div className="p-4">
         <h2 className="text-2xl font-semibold mb-4">Projects</h2>
         

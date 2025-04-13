@@ -5,7 +5,7 @@ export default function NewProjectIntro() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-between">
+    <div className="pb-[130px] min-h-screen bg-white flex flex-col justify-between">
       <div className="p-4">
         <button onClick={() => navigate(-1)} className="text-2xl">←</button>
       </div>

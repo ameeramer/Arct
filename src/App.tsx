@@ -52,21 +52,25 @@ export default function App() {
         <Route path="/new-project/chat" element={<NewProjectChat />} />
       </Routes>
       <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 z-50">
-        <button className="text-gray-700">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
-          <PlusIcon className="h-6 w-6 text-black" />
-        </Link>
-        <button className="text-gray-700">
-          <img
-            src="https://randomuser.me/api/portraits/women/44.jpg"
-            alt="Profile"
-            className="h-6 w-6 rounded-full object-cover"
-          />
-        </button>
+        {user && (
+          <>
+            <button className="text-gray-700">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
+              <PlusIcon className="h-6 w-6 text-black" />
+            </Link>
+            <button className="text-gray-700">
+              <img
+                src="https://randomuser.me/api/portraits/women/44.jpg"
+                alt="Profile"
+                className="h-6 w-6 rounded-full object-cover"
+              />
+            </button>
+          </>
+        )}
       </div>
     </Router>
   );
