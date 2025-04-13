@@ -19,12 +19,13 @@ export default function HomePage() {
     };
     fetchProjects();
   }, []);
-
+  
   return (
     <div className="min-h-screen bg-[#f9f9f9] flex flex-col justify-between">
       <div className="p-4">
         <h2 className="text-2xl font-semibold mb-4">Projects</h2>
-        <div className="grid gap-4 grid-cols-[repeat(auto-fit,300px)]">
+        
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,220px)]">
           {loading ? (
             <p className="text-gray-500">Loading projects...</p>
           ) : (
@@ -37,10 +38,10 @@ export default function HomePage() {
                 <img
                   src={project.designs?.[project.designs.length - 1]?.url || '/placeholder.jpg'}
                   alt={project.title}
-                  className="w-full h-36 object-cover"
+                  className="w-full object-cover"
                 />
                 <div className="p-3">
-                  <div className="font-medium">{project.title}</div>
+                  <div className="font-semibold text-2xl">{project.title}</div>
                   {project.updates?.length > 0 && (
                     <div className="text-sm text-gray-500">{project.updates.length} new update{project.updates.length > 1 ? 's' : ''}</div>
                   )}
@@ -50,7 +51,7 @@ export default function HomePage() {
           )}
           <Link
             to="/new-project"
-            className="bg-white rounded-xl flex flex-col justify-center items-center h-52 text-gray-500 border border-dashed border-gray-300"
+            className="bg-white rounded-xl flex flex-col justify-center items-center text-gray-500 border border-dashed border-gray-300"
           >
             <PlusIcon className="h-8 w-8" />
             <div className="mt-2">New Project</div>
