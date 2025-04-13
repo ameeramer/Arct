@@ -104,7 +104,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="pb-60 sm:pb-40 flex flex-col h-screen bg-white">
+    <div className="fixed inset-0 pb-40 sm:pb-20 flex flex-col h-screen bg-white">
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         <div className="flex items-start">
           <img src={logo} alt="AI" className="w-8 h-8 rounded-full mr-3" />
