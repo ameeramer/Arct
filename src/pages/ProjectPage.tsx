@@ -11,7 +11,6 @@ import iconLogo from '/assets/arct-logo.svg';
 export default function ProjectPage() {
   const { id } = useParams();
   const [project, setProject] = useState<Project | null>(null);
-  const [userEmail, setUserEmail] = useState('');
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
@@ -33,7 +32,6 @@ export default function ProjectPage() {
 
     onAuthStateChanged(auth, (user) => {
       if (user?.email) {
-        setUserEmail(user.email);
         const ref = doc(db, 'users', user.uid);
         getDoc(ref).then((snap) => {
           if (snap.exists()) {
