@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import logo from '../../assets/arct-logo.svg';
+import logo from '/assets/arct-logo.svg';
 
 const mockAIPath = '/src/assets/mock-ai-image.jpeg';
 const mockAI2Path = '/src/assets/mock-ai-image-2.jpeg';

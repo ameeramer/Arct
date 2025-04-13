@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import logo from '../../assets/arct-logo.svg';
+import logo from '/assets/arct-logo.svg';
 
 
 export default function GreetingPage() {

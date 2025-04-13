@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/arct-logo.svg'; // ודא שקובץ הלוגו במיקום הזה או שנה בהתאם
+import logo from '/assets/arct-logo.svg'; // ודא שקובץ הלוגו במיקום הזה או שנה בהתאם
 
 export default function NewProjectIntro() {
   const navigate = useNavigate();
