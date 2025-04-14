@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { getProject } from '../services/projects';
 import { Project } from '../services/projects';
 import { auth } from '../services/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import iconLogo from '/assets/arct-logo.svg';

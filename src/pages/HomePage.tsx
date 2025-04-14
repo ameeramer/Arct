@@ -9,7 +9,6 @@ import { db } from '../services/firebase';
 export default function HomePage() {
   const [createdProjects, setCreatedProjects] = useState<Project[]>([]);
   const [referencedProjects, setReferencedProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const navigate = useNavigate();
 
@@ -37,7 +36,6 @@ export default function HomePage() {
         setCreatedProjects(createdProjects);
         setReferencedProjects(referencedProjects);
       }
-      setLoading(false);
     };
     fetchProjects();
   }, []);

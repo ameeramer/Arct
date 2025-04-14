@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { getRelevantQuotesWithProjects } from '../services/explore';
 import { auth } from '../services/firebase';
 import { getDoc, doc } from 'firebase/firestore';
