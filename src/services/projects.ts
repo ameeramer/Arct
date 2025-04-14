@@ -20,7 +20,11 @@ export type Project = {
   updates: Update[];
   designs: Design[];
   description: string;
-  team: string[];
+  team: {
+    userId: string;
+    role: string;
+  }[];
+  userId: string;
 };
 
 export async function getUserProjects(userId: string): Promise<Project[]> {
@@ -68,7 +72,7 @@ export async function addUpdateToProject(projectId: string, update: Update): Pro
   await setDoc(docRef, updatedProject);
 }
 
-export async function addUserToProjectTeam(projectId: string, userId: string): Promise<void> {
+export async function addUserToProjectTeam(projectId: string, userId: string, role: string): Promise<void> {
   const docRef = doc(collection(db, 'projects'), projectId);
   const docSnap = await getDoc(docRef);
   if (!docSnap.exists()) return;
@@ -77,10 +81,8 @@ export async function addUserToProjectTeam(projectId: string, userId: string): P
   const updatedProject: Project = {
     ...projectData,
     id: projectId,
-    team: [...projectData.team, userId],
+    team: [...projectData.team, { userId, role }],
   };
 
   await setDoc(docRef, updatedProject);
 }
-
-

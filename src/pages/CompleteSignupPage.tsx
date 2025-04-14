@@ -6,13 +6,14 @@ import { auth } from '../services/firebase';
 
 export default function CompleteSignupPage() {
   const [name, setName] = useState('');
-  const [role, setRole] = useState('client');
+  const [roles, setRoles] = useState<string[]>([]);
+  const [roleInput, setRoleInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    if (!name || !file || !auth.currentUser) {
+    if (!name || !file || roles.length === 0 || !auth.currentUser) {
       setError('Please fill all fields and upload a profile image.');
       return;
     }
@@ -22,7 +23,8 @@ export default function CompleteSignupPage() {
       id: auth.currentUser.uid,
       name,
       avatar: imageUrl,
-      role,
+      roles,
+      projects: []
     });
 
     navigate('/');
@@ -40,17 +42,42 @@ export default function CompleteSignupPage() {
         onChange={(e) => setName(e.target.value)}
       />
 
-      <label className="block mb-2 font-medium">Select Role</label>
-      <select
-        className="w-full border px-4 py-2 rounded mb-4"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-      >
-        <option value="client">Client</option>
-        <option value="architect">Architect</option>
-        <option value="designer">Designer</option>
-        <option value="contractor">Contractor</option>
-      </select>
+      <label className="block mb-2 font-medium">Your Roles</label>
+      <div className="w-full border px-4 py-2 rounded mb-4">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {roles.map((r, idx) => (
+            <span
+              key={idx}
+              className="bg-gray-200 text-sm px-3 py-1 rounded-full flex items-center gap-2"
+            >
+              {r}
+              <button
+                onClick={() => setRoles(roles.filter(role => role !== r))}
+                className="text-red-500 font-bold"
+                title="Remove role"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+        <input
+          type="text"
+          className="w-full"
+          placeholder="Type and press Enter..."
+          value={roleInput}
+          onChange={(e) => setRoleInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && roleInput.trim()) {
+              e.preventDefault();
+              if (!roles.includes(roleInput.trim())) {
+                setRoles([...roles, roleInput.trim()]);
+              }
+              setRoleInput('');
+            }
+          }}
+        />
+      </div>
 
       <label className="block mb-2 font-medium">Profile Image</label>
       <input

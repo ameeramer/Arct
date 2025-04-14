@@ -12,7 +12,8 @@ import NewProjectChat from './pages/new-project/ChatPage';
 import ProjectPage from './pages/ProjectPage';
 import { PlusIcon } from '@heroicons/react/24/solid';
 import CompleteSignupPage from './pages/CompleteSignupPage';
-
+import SubmitQuotePage from './pages/SubmitQuotePage';
+import ExploreProjectsPage from './pages/ExploreProjectsPage';
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,7 +68,9 @@ export default function App() {
         <Route path="/new-project/greeting" element={<NewProjectGreeting />} />
         <Route path="/new-project/chat" element={<NewProjectChat />} />
         <Route path="/project/:id" element={<ProjectPage />} />
+        <Route path="/projects/:projectId/submit-quote" element={<SubmitQuotePage />} />
         <Route path="/complete-signup" element={<CompleteSignupPage />} />
+        <Route path="/explore" element={<ExploreProjectsPage />} />
       </Routes>
       <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 sm:py-4 z-50">
         {user && (
