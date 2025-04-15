@@ -3,6 +3,7 @@ import { getRelevantQuotesWithProjects } from '../services/explore';
 import { auth } from '../services/firebase';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { useNavigate } from 'react-router-dom';
 
 export default function ExploreProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -10,6 +11,7 @@ export default function ExploreProjectsPage() {
   const [allRoles, setAllRoles] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [projectOwners, setProjectOwners] = useState<{ [key: string]: any }>({});
+  const navigate = useNavigate();
 
   const toggleRole = (role: string) => {
     setSelectedRoles((prev) =>
@@ -67,8 +69,20 @@ export default function ExploreProjectsPage() {
 
   if (loading) return <div className="p-4">Loading...</div>;
 
+  const tagColors: { [key: string]: string } = {
+    Gardener: 'bg-green-100 text-green-800',
+    Agronomist: 'bg-purple-100 text-purple-800',
+    Surveyor: 'bg-yellow-100 text-yellow-800',
+    Architect: 'bg-blue-100 text-blue-800',
+    'Landscape Architect': 'bg-blue-100 text-red-800',
+    'Irrigation Designer': 'bg-cyan-100 text-cyan-800',
+    default: 'bg-green-700 text-white',
+  };
+
+  const getTagColor = (tag: string) => tagColors[tag] || tagColors.default;
+
   return (
-    <div className="p-4 pb-24">
+    <div className="px-6 pt-6 pb-28">
       <h1 className="text-xl font-semibold mb-4">Explore Projects that need your profession/s</h1>
 
       <div className="flex flex-wrap gap-2 mb-2">
@@ -78,7 +92,7 @@ export default function ExploreProjectsPage() {
             onClick={() => toggleRole(role)}
             className={`px-3 py-1 rounded-full text-sm ${
               selectedRoles.includes(role)
-                ? 'bg-green-700 text-white'
+                ? getTagColor(role)
                 : 'bg-gray-200 text-gray-600'
             }`}
           >
@@ -88,43 +102,103 @@ export default function ExploreProjectsPage() {
       </div>
       <p className="text-sm text-gray-500 mb-4">*Choose one or more of your professions</p>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-        {projects.map((item) => (
-          <div key={item.project.id} className="bg-white rounded-lg shadow p-4">
+      {projects.length > 0 && (
+        <div onClick={() => navigate(`/projects/${projects[0].project.id}`)} className="grid gap-4 grid-cols-1 sm:grid-cols-2 bg-white rounded-xl shadow-xl overflow-hidden">
+          <div className="relative">
             <img
-              src={
-                item.project.designs?.[item.project.designs.length - 1]?.url ||
-                '/placeholder.jpg'
-              }
-              alt={item.project.title}
-              className="w-full rounded mb-3"
+              src={projects[0].project.designs?.[projects[0].project.designs.length - 1]?.url || '/placeholder.jpg'}
+              alt={projects[0].project.title}
+              className="w-full h-48 object-cover"
             />
+            <span className="absolute top-2 left-2 bg-white text-xs px-2 py-1 rounded-full font-medium shadow">New</span>
+          </div>
+          <div className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <img
-                src={projectOwners[item.project.userId]?.avatar || '/placeholder.jpg'}
+                src={projectOwners[projects[0].project.userId]?.avatar || '/placeholder.jpg'}
                 alt="Owner"
                 className="w-6 h-6 rounded-full"
               />
-              <h2 className="font-bold text-lg">{item.project.title}</h2>
-              <span className="text-sm text-gray-500 ml-auto">
-                📍 {item.project.location || 'Unknown'}
-              </span>
+              <h2 className="font-semibold text-md">{projects[0].project.title}</h2>
+              <span className="text-sm text-gray-500 ml-auto">📍 {projects[0].project.location || 'Unknown'}</span>
             </div>
-            <div className="text-sm text-gray-600 mb-1">
-              Looking for:{' '}
-              <span className="inline-block mr-2 px-2 py-1 bg-gray-100 rounded-full">
-                {item.quote?.tag}
-              </span>
+            <div className="text-sm text-gray-800 mb-1 flex items-center gap-1">
+              <span>Looking for a</span>
+              <span className={`text-sm px-2 py-1 rounded-full ${getTagColor(projects[0].quote?.tag)}`}>{projects[0].quote?.tag}</span>
             </div>
-            <div className="text-sm text-gray-600 mb-2">
-              Price range:{' '}
-              <span className="inline-block mr-2 px-2 py-1 bg-green-100 text-green-900 rounded-full">
-                {item.quote?.priceRange}
-              </span>
+            <div className="text-sm text-gray-800 mb-4 flex items-center gap-1">
+              <span>Price range:</span>
+              <span className={`text-sm px-2 py-1 rounded-full ${getTagColor(projects[0].quote?.tag)}`}>{projects[0].quote?.priceRange}</span>
             </div>
-            <button className="text-sm bg-black text-white px-4 py-2 rounded">
-              View Project
-            </button>
+          </div>
+        </div>
+      )}
+    
+      <div className="mt-6 mb-4 overflow-x-auto flex gap-4">
+        {projects.slice(1).map((item) => (
+          <div key={item.project.id} onClick={() => navigate(`/projects/${item.project.id}`)} className="min-w-[300px] max-w-[300px] bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="relative">
+              <img
+                src={item.project.designs?.[item.project.designs.length - 1]?.url || '/placeholder.jpg'}
+                alt={item.project.title}
+                className="w-full h-48 object-cover"
+              />
+              <span className="absolute top-2 left-2 bg-white text-xs px-2 py-1 rounded-full font-medium shadow">New</span>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <img
+                  src={projectOwners[item.project.userId]?.avatar || '/placeholder.jpg'}
+                  alt="Owner"
+                  className="w-6 h-6 rounded-full"
+                />
+                <h2 className="font-semibold text-md">{item.project.title}</h2>
+                <span className="text-sm text-gray-500 ml-auto">📍 {item.project.location || 'Unknown'}</span>
+              </div>
+              <div className="text-sm text-gray-800 mb-1 flex items-center gap-1">
+                <span>Looking for a</span>
+                <span className={`text-sm px-2 py-1 rounded-full ${getTagColor(item.quote?.tag)}`}>{item.quote?.tag}</span>
+              </div>
+              <div className="text-sm text-gray-800 mb-4 flex items-center gap-1">
+                <span>Price range:</span>
+                <span className={`text-sm px-2 py-1 rounded-full ${getTagColor(item.quote?.tag)}`}>{item.quote?.priceRange}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="text-lg font-semibold mt-8 mb-2">Near You – Tel Aviv</h2>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+        {projects.map((item) => (
+          <div key={item.project.id} onClick={() => navigate(`/projects/${item.project.id}`)} className="bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="relative">
+              <img
+                src={item.project.designs?.[item.project.designs.length - 1]?.url || '/placeholder.jpg'}
+                alt={item.project.title}
+                className="w-full h-48 object-cover"
+              />
+              <span className="absolute top-2 left-2 bg-white text-xs px-2 py-1 rounded-full font-medium shadow">New</span>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <img
+                  src={projectOwners[item.project.userId]?.avatar || '/placeholder.jpg'}
+                  alt="Owner"
+                  className="w-6 h-6 rounded-full"
+                />
+                <h2 className="font-semibold text-md">{item.project.title}</h2>
+                <span className="text-sm text-gray-500 ml-auto">📍 {item.project.location || 'Unknown'}</span>
+              </div>
+              <div className="text-sm text-gray-800 mb-1 flex items-center gap-1">
+                <span>Looking for a</span>
+                <span className={`text-sm px-2 py-1 rounded-full ${getTagColor(item.quote?.tag)}`}>{item.quote?.tag}</span>
+              </div>
+              <div className="text-sm text-gray-800 mb-4 flex items-center gap-1">
+                <span>Price range:</span>
+                <span className={`text-sm px-2 py-1 rounded-full ${getTagColor(item.quote?.tag)}`}>{item.quote?.priceRange}</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>

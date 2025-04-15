@@ -54,6 +54,7 @@ export default function ChatPage() {
         designs: [],
         userId: auth.currentUser?.uid || 'guest',
         team: [],
+        location: 'Tel Aviv'
       };
       const id = await createProject(project);
       setProjectId(id);

@@ -20,6 +20,7 @@ export type Project = {
   updates: Update[];
   designs: Design[];
   description: string;
+  location: string;
   team: {
     userId: string;
     role: string;
