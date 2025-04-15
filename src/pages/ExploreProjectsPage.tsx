@@ -74,7 +74,7 @@ export default function ExploreProjectsPage() {
     Agronomist: 'bg-purple-100 text-purple-800',
     Surveyor: 'bg-yellow-100 text-yellow-800',
     Architect: 'bg-blue-100 text-blue-800',
-    'Landscape Architect': 'bg-blue-100 text-red-800',
+    'Landscape Architect': 'bg-blue-100 text-blue-800',
     'Irrigation Designer': 'bg-cyan-100 text-cyan-800',
     default: 'bg-green-700 text-white',
   };
