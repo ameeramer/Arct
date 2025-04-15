@@ -16,6 +16,15 @@ export type Quote = {
   createdAt: Date;
 };
 
+
+export type QuoteWithId = {
+    id: string;
+    projectId: string;
+    tag: string;
+    priceRange: string;
+    createdAt: Date;
+};
+
 export async function submitQuote(quote: Quote): Promise<void> {
   const q = query(
     collection(db, 'quotes'),

@@ -14,6 +14,11 @@ import { PlusIcon } from '@heroicons/react/24/solid';
 import CompleteSignupPage from './pages/CompleteSignupPage';
 import SubmitQuotePage from './pages/SubmitQuotePage';
 import ExploreProjectsPage from './pages/ExploreProjectsPage';
+import QuotePage from './pages/QuotePage';
+import MessageIcon from './components/navbar/MessageIcon';
+import MessagesPage from './pages/MessagesPage';
+import ChatPage from './pages/ChatPage';
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,10 +76,13 @@ export default function App() {
         <Route path="/projects/:projectId/submit-quote" element={<SubmitQuotePage />} />
         <Route path="/complete-signup" element={<CompleteSignupPage />} />
         <Route path="/explore" element={<ExploreProjectsPage />} />
+        <Route path="/quote/:id" element={<QuotePage />} />
+        <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/chat/:chatId" element={<ChatPage />} />
       </Routes>
       <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 sm:py-4 z-50">
         {user && (
-          <>
+          <>            
             <button className="text-gray-700">
               <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -83,6 +91,7 @@ export default function App() {
             <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
               <PlusIcon className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
             </Link>
+            <MessageIcon />
             <button className="text-gray-700">
               <img
                 src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}

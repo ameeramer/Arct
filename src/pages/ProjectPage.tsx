@@ -40,7 +40,7 @@ export default function ProjectPage() {
   const lastDesign = project.designs?.[project.designs.length - 1];
 
   return (
-    <div className="px-4 pb-20 pt-4 max-w-screen-md mx-auto min-h-[100dvh]">
+    <div className="px-6 pt-6 pb-28 max-w-screen-md mx-auto min-h-[100dvh]">
       {lastDesign && (
         <img
           src={lastDesign.url}

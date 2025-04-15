@@ -24,6 +24,7 @@ export default function ExploreProjectsPage() {
       if (selectedRoles.length > 0) {
         const data = await getRelevantQuotesWithProjects(selectedRoles);
         setProjects(data);
+        console.log(data);
         setLoading(false);
       }
     };
@@ -103,7 +104,7 @@ export default function ExploreProjectsPage() {
       <p className="text-sm text-gray-500 mb-4">*Choose one or more of your professions</p>
 
       {projects.length > 0 && (
-        <div onClick={() => navigate(`/projects/${projects[0].project.id}`)} className="grid gap-4 grid-cols-1 sm:grid-cols-2 bg-white rounded-xl shadow-xl overflow-hidden">
+        <div onClick={() => navigate(`/quote/${projects[0].quote.id}`)} className="grid gap-4 grid-cols-1 sm:grid-cols-2 bg-white rounded-xl shadow-xl overflow-hidden">
           <div className="relative">
             <img
               src={projects[0].project.designs?.[projects[0].project.designs.length - 1]?.url || '/placeholder.jpg'}
@@ -136,7 +137,7 @@ export default function ExploreProjectsPage() {
     
       <div className="mt-6 mb-4 overflow-x-auto flex gap-4">
         {projects.slice(1).map((item) => (
-          <div key={item.project.id} onClick={() => navigate(`/projects/${item.project.id}`)} className="min-w-[300px] max-w-[300px] bg-white rounded-xl shadow-xl overflow-hidden">
+          <div key={item.project.id} onClick={() => navigate(`/quote/${item.quote.id}`)} className="min-w-[300px] max-w-[300px] bg-white rounded-xl shadow-xl overflow-hidden">
             <div className="relative">
               <img
                 src={item.project.designs?.[item.project.designs.length - 1]?.url || '/placeholder.jpg'}
@@ -171,7 +172,7 @@ export default function ExploreProjectsPage() {
       <h2 className="text-lg font-semibold mt-8 mb-2">Near You – Tel Aviv</h2>
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {projects.map((item) => (
-          <div key={item.project.id} onClick={() => navigate(`/projects/${item.project.id}`)} className="bg-white rounded-xl shadow-xl overflow-hidden">
+          <div key={item.project.id} onClick={() => navigate(`/quote/${item.quote.id}`)} className="bg-white rounded-xl shadow-xl overflow-hidden">
             <div className="relative">
               <img
                 src={item.project.designs?.[item.project.designs.length - 1]?.url || '/placeholder.jpg'}

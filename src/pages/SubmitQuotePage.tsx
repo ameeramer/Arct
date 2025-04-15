@@ -106,7 +106,7 @@ export default function SubmitQuotePage() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-6 bg-neutral-50">
+    <div className="px-6 pt-6 pb-28 min-h-screen py-6 bg-neutral-50">
       <h1 className="text-2xl font-bold text-center">Submit for quote</h1>
       <p className="text-center text-gray-500 mb-4">
         Project: <span className="font-medium">Tropical Garden</span>

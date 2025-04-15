@@ -1,5 +1,6 @@
 import { db } from './firebase';
 import { getDoc, doc, collection, getDocs, query, where } from 'firebase/firestore';
+import { QuoteWithId } from './quotes';
 
 export async function getRelevantQuotesWithProjects(roles: string[]) {
   if (!roles.length) return [];
@@ -9,7 +10,7 @@ export async function getRelevantQuotesWithProjects(roles: string[]) {
 
   const items = await Promise.all(
     quoteSnap.docs.map(async (docSnap) => {
-      const quote = docSnap.data();
+      const quote = { id: docSnap.id, ...docSnap.data() } as QuoteWithId;
       const projectSnap = await getDoc(doc(db, 'projects', quote.projectId));
       if (!projectSnap.exists()) return null;
       return {
