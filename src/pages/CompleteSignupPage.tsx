@@ -949,7 +949,7 @@ export default function CompleteSignupPage() {
                   </div>
                   
                   {showRegionDropdown && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+                    <div className="pb-60 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
                       {isLoadingRegions ? (
                         <div className="py-2 px-3 text-gray-500">
                           טוען אזורים...
