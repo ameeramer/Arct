@@ -4,42 +4,6 @@ import { uploadImage } from '../services/storage';
 import { createUserProfile } from '../services/users';
 import { auth } from '../services/firebase';
 
-const israelRegions = {
-  'כללי': [
-    'כל הישובים'
-  ],
-  'צפון': [
-    'חיפה', 'נהריה', 'עכו', 'קריות', 'כרמיאל', 'טבריה', 'צפת', 'קרית שמונה', 
-    'נצרת', 'עפולה', 'בית שאן', 'מגדל העמק', 'יקנעם', 'זכרון יעקב', 'טירת הכרמל'
-  ],
-  'שרון': [
-    'נתניה', 'הרצליה', 'רעננה', 'כפר סבא', 'הוד השרון', 'רמת השרון', 'חדרה', 'פרדס חנה-כרכור',
-    'אור עקיבא', 'באקה אל-גרביה', 'טייבה', 'טירה', 'קלנסווה'
-  ],
-  'מרכז': [
-    'תל אביב', 'רמת גן', 'גבעתיים', 'בני ברק', 'פתח תקווה', 'ראש העין', 'אלעד',
-    'חולון', 'בת ים', 'ראשון לציון', 'רחובות', 'נס ציונה', 'יבנה', 'אשדוד', 'אשקלון',
-    'קרית גת', 'גדרה', 'יהוד', 'אור יהודה', 'רמלה', 'לוד', 'מודיעין', 'שוהם'
-  ],
-  'ירושלים והסביבה': [
-    'ירושלים', 'מעלה אדומים', 'בית שמש', 'מבשרת ציון', 'גבעת זאב', 'אפרת', 'ביתר עילית'
-  ],
-  'יהודה ושומרון': [
-    'אריאל', 'מעלה אדומים', 'אפרת', 'ביתר עילית', 'קרני שומרון', 'אלפי מנשה', 'אורנית',
-    'קדומים', 'בית אל', 'עלי', 'שילה', 'עפרה'
-  ],
-  'דרום': [
-    'באר שבע', 'אשדוד', 'אשקלון', 'קרית גת', 'נתיבות', 'אופקים', 'שדרות', 'דימונה',
-    'ירוחם', 'ערד', 'מצפה רמון', 'אילת'
-  ],
-  'שפלה': [
-    'רחובות', 'נס ציונה', 'יבנה', 'גדרה', 'קרית מלאכי', 'קרית עקרון', 'מזכרת בתיה'
-  ],
-  'אילת והערבה': [
-    'אילת', 'יטבתה', 'חצבה', 'ספיר', 'עין יהב', 'פארן'
-  ]
-};
-
 const allRolesData = [
   // אדריכלות ועיצוב
   'Architect | אדריכל',
@@ -495,7 +459,57 @@ export default function CompleteSignupPage() {
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [aboutMe, setAboutMe] = useState('');
+  const [israelRegionsData, setIsraelRegionsData] = useState<{[key: string]: string[]}>({});
+  const [isLoadingRegions, setIsLoadingRegions] = useState(true);
   const navigate = useNavigate();
+
+  // Fetch regions from data.gov.il API
+  useEffect(() => {
+    const fetchRegions = async () => {
+      try {
+        setIsLoadingRegions(true);
+        const response = await fetch('https://data.gov.il/api/action/datastore_search?resource_id=1bf27e56-364c-4b61-8b6b-efa9933da677', {
+          method: 'GET'
+        });
+
+        const data = await response.json();
+        if (data.success && data.result.records) {
+          // Group cities by region (MACHOZ)
+          const regions: {[key: string]: string[]} = {};
+          
+          data.result.records.forEach((record: any) => {
+            console.log(record);
+            const region = record.MACHOZ;
+            const city = record.HEBREW_NAME;
+            
+            if (region && city) {
+              if (!regions[region]) {
+                regions[region] = [];
+              }
+              
+              // Only add the city if it's not already in the array
+              if (!regions[region].includes(city)) {
+                regions[region].push(city);
+              }
+            }
+          });
+          
+          // Sort cities alphabetically within each region
+          Object.keys(regions).forEach(region => {
+            regions[region].sort();
+          });
+          
+          setIsraelRegionsData(regions);
+        }
+      } catch (error) {
+        console.error('Error fetching regions:', error);
+      } finally {
+        setIsLoadingRegions(false);
+      }
+    };
+    
+    fetchRegions();
+  }, []);
 
   useEffect(() => {
     // Create preview URL for selected image
@@ -675,13 +689,13 @@ export default function CompleteSignupPage() {
   // Function to filter regions and cities based on search term
   const getFilteredRegions = () => {
     if (!regionSearchTerm.trim()) {
-      return israelRegions;
+      return israelRegionsData;
     }
     
     const searchLower = regionSearchTerm.toLowerCase();
     const filteredRegions: Record<string, string[]> = {};
     
-    Object.entries(israelRegions).forEach(([region, cities]) => {
+    Object.entries(israelRegionsData).forEach(([region, cities]) => {
       // Check if region name matches
       const regionMatches = region.toLowerCase().includes(searchLower);
       
@@ -916,7 +930,11 @@ export default function CompleteSignupPage() {
                   
                   {showRegionDropdown && (
                     <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
-                      {Object.keys(getFilteredRegions()).length === 0 ? (
+                      {isLoadingRegions ? (
+                        <div className="py-2 px-3 text-gray-500">
+                          טוען אזורים...
+                        </div>
+                      ) : Object.keys(getFilteredRegions()).length === 0 ? (
                         <div 
                           className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
                           onClick={addCustomRegion}
