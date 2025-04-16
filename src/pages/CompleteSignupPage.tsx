@@ -732,7 +732,7 @@ export default function CompleteSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+    <div className="pb-20 sm:pb-40 min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
         <div className="mb-8">
           <h2 className="text-center text-2xl font-bold text-gray-800">Complete Your Profile</h2>
@@ -929,7 +929,7 @@ export default function CompleteSignupPage() {
                   </div>
                   
                   {showRegionDropdown && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+                    <div className="pb-60 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
                       {isLoadingRegions ? (
                         <div className="py-2 px-3 text-gray-500">
                           טוען אזורים...
