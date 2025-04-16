@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadImage } from '../services/storage';
 import { createUserProfile } from '../services/users';
@@ -462,6 +462,7 @@ export default function CompleteSignupPage() {
   const [israelRegionsData, setIsraelRegionsData] = useState<{[key: string]: string[]}>({});
   const [isLoadingRegions, setIsLoadingRegions] = useState(true);
   const navigate = useNavigate();
+  const regionDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch regions from data.gov.il API
   useEffect(() => {
@@ -731,6 +732,25 @@ export default function CompleteSignupPage() {
     setGalleryPreviews(newPreviews);
   };
 
+  // Add click outside handler to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (regionDropdownRef.current && !regionDropdownRef.current.contains(event.target as Node)) {
+        setShowRegionDropdown(false);
+      }
+    }
+    
+    // Add event listener when dropdown is shown
+    if (showRegionDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showRegionDropdown]);
+
   return (
     <div className="pb-20 sm:pb-40 min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
       <div className="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
@@ -897,7 +917,7 @@ export default function CompleteSignupPage() {
                     </span>
                   ))}
                 </div>
-                <div className="relative">
+                <div className="relative" ref={regionDropdownRef}>
                   <div className="w-full py-1 flex items-center justify-between">
                     <input
                       type="text"
@@ -929,7 +949,7 @@ export default function CompleteSignupPage() {
                   </div>
                   
                   {showRegionDropdown && (
-                    <div className="pb-60 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
                       {isLoadingRegions ? (
                         <div className="py-2 px-3 text-gray-500">
                           טוען אזורים...
