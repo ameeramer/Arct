@@ -22,6 +22,12 @@ export async function createUserProfile(profile: UserProfile): Promise<void> {
     avatar: profile.avatar,
     roles: profile.roles,
     projects: [],
+    phoneNumber: profile.phoneNumber,
+    yearsOfExperience: profile.yearsOfExperience,
+    workRegions: profile.workRegions,
+    imageUrl: profile.imageUrl,
+    galleryUrls: profile.galleryUrls,
+    aboutMe: profile.aboutMe,
   });
 }
 

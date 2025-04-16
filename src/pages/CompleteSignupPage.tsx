@@ -5,6 +5,9 @@ import { createUserProfile } from '../services/users';
 import { auth } from '../services/firebase';
 
 const israelRegions = {
+  'כללי': [
+    'כל הישובים'
+  ],
   'צפון': [
     'חיפה', 'נהריה', 'עכו', 'קריות', 'כרמיאל', 'טבריה', 'צפת', 'קרית שמונה', 
     'נצרת', 'עפולה', 'בית שאן', 'מגדל העמק', 'יקנעם', 'זכרון יעקב', 'טירת הכרמל'
