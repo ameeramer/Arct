@@ -10,7 +10,6 @@ export type UserProfile = {
   phoneNumber: string;
   yearsOfExperience: number;
   workRegions: string[];
-  imageUrl: string;
   galleryUrls?: string[];
   aboutMe?: string;
 };
@@ -25,9 +24,8 @@ export async function createUserProfile(profile: UserProfile): Promise<void> {
     phoneNumber: profile.phoneNumber,
     yearsOfExperience: profile.yearsOfExperience,
     workRegions: profile.workRegions,
-    imageUrl: profile.imageUrl,
-    galleryUrls: profile.galleryUrls,
-    aboutMe: profile.aboutMe,
+    galleryUrls: profile.galleryUrls || [],
+    aboutMe: profile.aboutMe || '',
   });
 }
 

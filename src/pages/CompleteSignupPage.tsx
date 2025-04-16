@@ -479,6 +479,7 @@ const allRoles = [...new Set(allRolesData)];
 
 export default function CompleteSignupPage() {
   const [name, setName] = useState('');
+  const [phonePrefix, setPhonePrefix] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [yearsOfExperience, setYearsOfExperience] = useState<number | ''>('');
   const [roles, setRoles] = useState<string[]>([]);
@@ -532,21 +533,35 @@ export default function CompleteSignupPage() {
   }, [galleryFiles]);
 
   const handleSubmit = async () => {
-    if (!name || !file || roles.length === 0 || !phoneNumber || yearsOfExperience === '' || workRegions.length === 0 || auth.currentUser === null) {
-      setError('Please fill all required fields and upload a profile image.');
+    if (!name || roles.length === 0 || !phonePrefix || !phoneNumber || yearsOfExperience === '' || workRegions.length === 0 || auth.currentUser === null) {
+      setError('Please fill all required fields.');
       return;
     }
 
     // Validate phone number
-    const phoneRegex = /^05\d{8}$|^07\d{8}$|^\+?(972|0)(-|\s)?(5|7)(-|\s)?[0-9]{7}$/;
-    if (!phoneRegex.test(phoneNumber)) {
-      setError('Please enter a valid Israeli phone number');
+    const prefixRegex = /^05\d$|^07\d$/;
+    const numberRegex = /^\d{7}$/;
+    
+    if (!prefixRegex.test(phonePrefix)) {
+      setError('Please enter a valid Israeli phone prefix (05x or 07x)');
+      return;
+    }
+    
+    if (!numberRegex.test(phoneNumber)) {
+      setError('Please enter a valid 7-digit phone number');
       return;
     }
 
     try {
       setIsLoading(true);
-      const imageUrl = await uploadImage(file, `avatars/${auth.currentUser.uid}`);
+      
+      // Use default avatar if no file is uploaded
+      let imageUrl = "https://firebasestorage.googleapis.com/v0/b/arct-7af54.firebasestorage.app/o/images%2Favatars%2Favatar_grey.png?alt=media&token=66a7955f-94cb-403f-9026-1866eccbf177";
+      
+      // Only upload image if a file was selected
+      if (file) {
+        imageUrl = await uploadImage(file, `avatars/${auth.currentUser.uid}`);
+      }
       
       // Upload gallery images if any
       const galleryUrls: string[] = [];
@@ -560,18 +575,19 @@ export default function CompleteSignupPage() {
         }
       }
       
+      const fullPhoneNumber = `${phonePrefix}-${phoneNumber}`;
+      
       await createUserProfile({
         id: auth.currentUser.uid,
         name,
-        avatar: imageUrl,  // Use imageUrl as avatar
+        avatar: imageUrl,
         roles,
-        phoneNumber,
+        phoneNumber: fullPhoneNumber,
         yearsOfExperience: Number(yearsOfExperience),
         workRegions,
-        imageUrl,
         galleryUrls: galleryUrls.length > 0 ? galleryUrls : undefined,
         aboutMe: aboutMe.trim() ? aboutMe : undefined,
-        projects: [],  // Initialize projects as an empty array
+        projects: [],
       });
       navigate('/');
     } catch (err: any) {
@@ -607,10 +623,32 @@ export default function CompleteSignupPage() {
   };
 
   const nextStep = () => {
-    if (step === 1 && !name) {
-      setError('Please enter your name');
-      return;
+    if (step === 1) {
+      if (!name) {
+        setError('Please enter your name');
+        return;
+      }
+      
+      if (!phonePrefix || !phoneNumber) {
+        setError('Please enter your phone number');
+        return;
+      }
+      
+      // Validate phone prefix
+      const prefixRegex = /^05\d$|^07\d$/;
+      if (!prefixRegex.test(phonePrefix)) {
+        setError('Please enter a valid Israeli phone prefix (05x or 07x)');
+        return;
+      }
+      
+      // Validate phone number
+      const numberRegex = /^\d{7}$/;
+      if (!numberRegex.test(phoneNumber)) {
+        setError('Please enter a valid 7-digit phone number');
+        return;
+      }
     }
+    
     if (step === 2 && roles.length === 0) {
       setError('Please select at least one role');
       return;
@@ -752,24 +790,42 @@ export default function CompleteSignupPage() {
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number / מספר טלפון
               </label>
-              <div className="relative">
-                <input
-                  id="phone"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    // Allow only numbers and some special characters
-                    const value = e.target.value.replace(/[^\d+\-\s()]/g, '');
-                    setPhoneNumber(value);
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                  placeholder="e.g. 050-1234567 / לדוגמה 050-1234567"
-                  required
-                  dir="ltr"
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  Format: 05X-XXXXXXX or 07X-XXXXXXX
+              <div className="flex space-x-2">
+                <div className="w-1/3">
+                  <input
+                    id="phone-prefix"
+                    type="text"
+                    value={phonePrefix}
+                    onChange={(e) => {
+                      // Allow only numbers and limit to 3 characters
+                      const value = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+                      setPhonePrefix(value);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    placeholder="000"
+                    required
+                    dir="ltr"
+                  />
                 </div>
+                <div className="w-2/3">
+                  <input
+                    id="phone-number"
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      // Allow only numbers and limit to 7 characters
+                      const value = e.target.value.replace(/[^\d]/g, '').slice(0, 7);
+                      setPhoneNumber(value);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    placeholder="0000000"
+                    required
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Format: 05X followed by 7 digits
               </div>
             </div>
             
@@ -1041,7 +1097,10 @@ export default function CompleteSignupPage() {
                 
                 {/* Upload button */}
                 {galleryFiles.length < 5 && (
-                  <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div 
+                    className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-indigo-500 transition"
+                    onClick={() => document.getElementById('gallery-upload')?.click()}
+                  >
                     <div className="space-y-1 text-center">
                       <svg
                         className="mx-auto h-12 w-12 text-gray-400"
@@ -1102,6 +1161,7 @@ export default function CompleteSignupPage() {
                 onChange={(e) => setAboutMe(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                 placeholder="Tell potential clients about yourself, your experience, and what makes your services unique..."
+                dir="auto"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>Share your expertise, specialties, and approach to your work</span>
@@ -1114,39 +1174,65 @@ export default function CompleteSignupPage() {
         {step === 5 && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image / תמונת פרופיל</label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition cursor-pointer" onClick={() => document.getElementById('file-upload')?.click()}>
+              <label htmlFor="profile-image" className="block text-sm font-medium text-gray-700 mb-1">
+                Profile Image (Optional) / תמונת פרופיל (אופציונלי)
+              </label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-indigo-500 transition" onClick={() => document.getElementById('profile-upload')?.click()}>
                 <div className="space-y-1 text-center">
                   {previewUrl ? (
-                    <div className="flex flex-col items-center">
-                      <img src={previewUrl} alt="Preview" className="h-32 w-32 object-cover rounded-full mb-3" />
-                      <p className="text-sm text-indigo-600">Click to change image</p>
+                    <div className="relative group">
+                      <img src={previewUrl} alt="Profile preview" className="mx-auto h-32 w-32 rounded-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            document.getElementById('profile-upload')?.click();
+                          }}
+                          className="bg-indigo-500 text-white rounded-full p-2 mx-1"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFile(null);
+                            setPreviewUrl(null);
+                          }}
+                          className="bg-red-500 text-white rounded-full p-2 mx-1"
+                        >
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <>
-                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <div className="flex text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                          <span>Upload a file</span>
+                        <label htmlFor="profile-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                          <span>Upload a profile image</span>
+                          <input id="profile-upload" name="profile-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileSelect} />
                         </label>
                         <p className="pl-1">or drag and drop</p>
                       </div>
                       <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                     </>
                   )}
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    className="sr-only"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                  />
                 </div>
               </div>
+              <p className="mt-1 text-xs text-gray-500">
+                If you don't upload an image, a default avatar will be used.
+              </p>
             </div>
+            
+            {/* ... existing gallery upload code ... */}
           </div>
         )}
 
