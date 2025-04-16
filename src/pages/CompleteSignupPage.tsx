@@ -4,8 +4,38 @@ import { uploadImage } from '../services/storage';
 import { createUserProfile } from '../services/users';
 import { auth } from '../services/firebase';
 
-// ... existing code ...
-
+const israelRegions = {
+  'צפון': [
+    'חיפה', 'נהריה', 'עכו', 'קריות', 'כרמיאל', 'טבריה', 'צפת', 'קרית שמונה', 
+    'נצרת', 'עפולה', 'בית שאן', 'מגדל העמק', 'יקנעם', 'זכרון יעקב', 'טירת הכרמל'
+  ],
+  'שרון': [
+    'נתניה', 'הרצליה', 'רעננה', 'כפר סבא', 'הוד השרון', 'רמת השרון', 'חדרה', 'פרדס חנה-כרכור',
+    'אור עקיבא', 'באקה אל-גרביה', 'טייבה', 'טירה', 'קלנסווה'
+  ],
+  'מרכז': [
+    'תל אביב', 'רמת גן', 'גבעתיים', 'בני ברק', 'פתח תקווה', 'ראש העין', 'אלעד',
+    'חולון', 'בת ים', 'ראשון לציון', 'רחובות', 'נס ציונה', 'יבנה', 'אשדוד', 'אשקלון',
+    'קרית גת', 'גדרה', 'יהוד', 'אור יהודה', 'רמלה', 'לוד', 'מודיעין', 'שוהם'
+  ],
+  'ירושלים והסביבה': [
+    'ירושלים', 'מעלה אדומים', 'בית שמש', 'מבשרת ציון', 'גבעת זאב', 'אפרת', 'ביתר עילית'
+  ],
+  'יהודה ושומרון': [
+    'אריאל', 'מעלה אדומים', 'אפרת', 'ביתר עילית', 'קרני שומרון', 'אלפי מנשה', 'אורנית',
+    'קדומים', 'בית אל', 'עלי', 'שילה', 'עפרה'
+  ],
+  'דרום': [
+    'באר שבע', 'אשדוד', 'אשקלון', 'קרית גת', 'נתיבות', 'אופקים', 'שדרות', 'דימונה',
+    'ירוחם', 'ערד', 'מצפה רמון', 'אילת'
+  ],
+  'שפלה': [
+    'רחובות', 'נס ציונה', 'יבנה', 'גדרה', 'קרית מלאכי', 'קרית עקרון', 'מזכרת בתיה'
+  ],
+  'אילת והערבה': [
+    'אילת', 'יטבתה', 'חצבה', 'ספיר', 'עין יהב', 'פארן'
+  ]
+};
 
 const allRolesData = [
   // אדריכלות ועיצוב
@@ -71,14 +101,6 @@ const allRolesData = [
 
   // משפטים ועריכת דין
   'Lawyer | עורך דין',
-  'Real Estate Attorney | עורך דין נדל"ן',
-  'Construction Lawyer | עורך דין בנייה',
-  'Environmental Lawyer | עורך דין סביבתי',
-  'Land Use Attorney | עורך דין שימושי קרקע',
-  'Property Rights Attorney | עורך דין זכויות מקרקעין',
-  'Zoning Attorney | עורך דין תכנון ובנייה',
-  'Contract Lawyer | עורך דין חוזים',
-  'Intellectual Property Lawyer | עורך דין קניין רוחני',
   'Mediator | מגשר',
   'Arbitrator | בורר',
   'Legal Consultant | יועץ משפטי',
@@ -191,7 +213,7 @@ const allRolesData = [
   'Synthetic Grass Installer | מתקין דשא סינטטי',
   'Smart Home Installer | מתקין מערכות חכמות',
   'Solar Panel Installer | מתקין פאנלים סולאריים',
-  'Home Automation Specialist | מומחה אוטומציה ביתית',
+  'Home Automation Specialist | מומחה אוטומציית ביתית',
   'Security Systems Installer | מתקין מערכות אבטחה',
   'Rainwater Harvesting Specialist | מומחה לאיסוף מי גשמים',
   'Greywater Systems Designer | מתכנן מערכות מים אפורים',
@@ -337,6 +359,26 @@ const allRolesData = [
   'Outdoor Lighting Installer | מתקין תאורת חוץ',
   'Intercom Systems Specialist | מומחה מערכות אינטרקום',
 
+  // תקשורת ומדיה
+  'Journalist | עיתונאי',
+  'Public Relations Specialist | מומחה יחסי ציבור',
+  'Marketing Specialist | מומחה שיווק',
+  'Content Creator | יוצר תוכן',
+  'Social Media Manager | מנהל מדיה חברתית',
+  'Copywriter | קופירייטר',
+  'Technical Writer | כותב טכני',
+  'Blogger | בלוגר',
+  'Podcaster | פודקאסטר',
+  'Videographer | צלם וידאו',
+  'Photographer | צלם',
+  'Graphic Designer | מעצב גרפי',
+  'Brand Strategist | אסטרטג מיתוג',
+  'Digital Marketing Specialist | מומחה שיווק דיגיטלי',
+  'SEO Specialist | מומחה קידום אתרים',
+  'Email Marketing Specialist | מומחה שיווק באימייל',
+  'Advertising Specialist | מומחה פרסום',
+  'Market Researcher | חוקר שוק',
+
   // ניהול וליווי
   'Project Manager | מנהל פרויקט',
   'Ecological Consultant | יועץ אקולוגי',
@@ -434,6 +476,8 @@ const allRoles = [...new Set(allRolesData)];
 
 export default function CompleteSignupPage() {
   const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [yearsOfExperience, setYearsOfExperience] = useState<number | ''>('');
   const [roles, setRoles] = useState<string[]>([]);
   const [roleInput, setRoleInput] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -441,6 +485,12 @@ export default function CompleteSignupPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [workRegions, setWorkRegions] = useState<string[]>([]);
+  const [showRegionDropdown, setShowRegionDropdown] = useState(false);
+  const [regionSearchTerm, setRegionSearchTerm] = useState('');
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
+  const [aboutMe, setAboutMe] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -456,27 +506,74 @@ export default function CompleteSignupPage() {
     }
   }, [file]);
 
+  // Add new useEffect for gallery previews
+  useEffect(() => {
+    // Create preview URLs for gallery images
+    const previews: string[] = [];
+    
+    galleryFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        previews.push(reader.result as string);
+        if (previews.length === galleryFiles.length) {
+          setGalleryPreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // If no files, clear previews
+    if (galleryFiles.length === 0) {
+      setGalleryPreviews([]);
+    }
+  }, [galleryFiles]);
+
   const handleSubmit = async () => {
-    if (!name || !file || roles.length === 0 || !auth.currentUser) {
-      setError('Please fill all fields and upload a profile image.');
+    if (!name || !file || roles.length === 0 || !phoneNumber || yearsOfExperience === '' || workRegions.length === 0 || auth.currentUser === null) {
+      setError('Please fill all required fields and upload a profile image.');
+      return;
+    }
+
+    // Validate phone number
+    const phoneRegex = /^05\d{8}$|^07\d{8}$|^\+?(972|0)(-|\s)?(5|7)(-|\s)?[0-9]{7}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      setError('Please enter a valid Israeli phone number');
       return;
     }
 
     try {
       setIsLoading(true);
       const imageUrl = await uploadImage(file, `avatars/${auth.currentUser.uid}`);
+      
+      // Upload gallery images if any
+      const galleryUrls: string[] = [];
+      if (galleryFiles.length > 0) {
+        for (let i = 0; i < galleryFiles.length; i++) {
+          const galleryUrl = await uploadImage(
+            galleryFiles[i], 
+            `gallery/${auth.currentUser.uid}/${i}`
+          );
+          galleryUrls.push(galleryUrl);
+        }
+      }
+      
       await createUserProfile({
         id: auth.currentUser.uid,
         name,
-        avatar: imageUrl,
+        avatar: imageUrl,  // Use imageUrl as avatar
         roles,
-        projects: []
+        phoneNumber,
+        yearsOfExperience: Number(yearsOfExperience),
+        workRegions,
+        imageUrl,
+        galleryUrls: galleryUrls.length > 0 ? galleryUrls : undefined,
+        aboutMe: aboutMe.trim() ? aboutMe : undefined,
+        projects: [],  // Initialize projects as an empty array
       });
-
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'An error occurred while creating your profile');
-    } finally {
+      console.error(err);
+      setError(err.message);
       setIsLoading(false);
     }
   };
@@ -484,6 +581,26 @@ export default function CompleteSignupPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
     setFile(selectedFile);
+  };
+
+  const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles) return;
+    
+    // Convert FileList to array and limit to 5 files
+    const filesArray = Array.from(selectedFiles);
+    const newFiles = [...galleryFiles];
+    
+    // Add new files up to the limit of 5
+    for (let i = 0; i < filesArray.length; i++) {
+      if (newFiles.length < 5) {
+        newFiles.push(filesArray[i]);
+      } else {
+        break;
+      }
+    }
+    
+    setGalleryFiles(newFiles);
   };
 
   const nextStep = () => {
@@ -503,229 +620,571 @@ export default function CompleteSignupPage() {
     setStep(step - 1);
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
-        <div className="p-8">
-          <div className="flex items-center mb-6">
-            <div className="w-10 h-10 flex items-center justify-center rounded-full bg-indigo-600 text-white font-bold">
-              {step}
-            </div>
-            <div className="ml-4">
-              <h1 className="text-2xl font-bold text-gray-800">Complete Your Profile</h1>
-              <p className="text-gray-500">השלם את הפרופיל שלך</p>
-            </div>
-          </div>
+  const addWorkRegion = (region: string) => {
+    if (!workRegions.includes(region) && region.trim() !== '') {
+      setWorkRegions([...workRegions, region]);
+    }
+    setShowRegionDropdown(false);
+  };
 
-          <div className="mb-8 w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
-              style={{ width: `${(step / 3) * 100}%` }}
+  const removeWorkRegion = (region: string) => {
+    setWorkRegions(workRegions.filter(r => r !== region));
+  };
+
+  // Function to filter regions and cities based on search term
+  const getFilteredRegions = () => {
+    if (!regionSearchTerm.trim()) {
+      return israelRegions;
+    }
+    
+    const searchLower = regionSearchTerm.toLowerCase();
+    const filteredRegions: Record<string, string[]> = {};
+    
+    Object.entries(israelRegions).forEach(([region, cities]) => {
+      // Check if region name matches
+      const regionMatches = region.toLowerCase().includes(searchLower);
+      
+      // Filter cities that match search term
+      const matchingCities = cities.filter(city => 
+        city.toLowerCase().includes(searchLower)
+      );
+      
+      // Include region if either the region name matches or it has matching cities
+      if (regionMatches || matchingCities.length > 0) {
+        filteredRegions[region] = regionMatches ? cities : matchingCities;
+      }
+    });
+    
+    return filteredRegions;
+  };
+
+  const addCustomRegion = () => {
+    if (regionSearchTerm.trim() && !workRegions.includes(regionSearchTerm.trim())) {
+      setWorkRegions([...workRegions, regionSearchTerm.trim()]);
+      setRegionSearchTerm('');
+      setShowRegionDropdown(false);
+    }
+  };
+
+  const removeGalleryFile = (index: number) => {
+    const newFiles = [...galleryFiles];
+    newFiles.splice(index, 1);
+    setGalleryFiles(newFiles);
+    
+    const newPreviews = [...galleryPreviews];
+    newPreviews.splice(index, 1);
+    setGalleryPreviews(newPreviews);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+      <div className="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+        <div className="mb-8">
+          <h2 className="text-center text-2xl font-bold text-gray-800">Complete Your Profile</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Let's set up your professional profile
+          </p>
+        </div>
+
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="flex flex-col items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step >= item
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  {item}
+                </div>
+                <div className="text-xs mt-1 text-gray-500">
+                  {item === 1 
+                    ? 'Basic Info' 
+                    : item === 2 
+                    ? 'Roles' 
+                    : item === 3 
+                    ? 'Gallery' 
+                    : item === 4
+                    ? 'About Me'
+                    : 'Photo'}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 h-1 w-full bg-gray-200 rounded">
+            <div
+              className="h-full bg-indigo-600 rounded transition-all duration-300"
+              style={{ width: `${((step - 1) / 4) * 100}%` }}
             ></div>
           </div>
+        </div>
 
-          {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name / שם</label>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name / שם מלא
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                placeholder="Enter your full name / הכנס שם מלא"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number / מספר טלפון
+              </label>
+              <div className="relative">
                 <input
-                  type="text"
-                  className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
+                  id="phone"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    // Allow only numbers and some special characters
+                    const value = e.target.value.replace(/[^\d+\-\s()]/g, '');
+                    setPhoneNumber(value);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  placeholder="e.g. 050-1234567 / לדוגמה 050-1234567"
+                  required
+                  dir="ltr"
                 />
+                <div className="text-xs text-gray-500 mt-1">
+                  Format: 05X-XXXXXXX or 07X-XXXXXXX
+                </div>
               </div>
             </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Roles / תפקידים</label>
-                <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {roles.map((r, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+            
+            <div>
+              <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
+                Years of Experience / שנות ותק
+              </label>
+              <div className="relative">
+                <input
+                  id="experience"
+                  type="number"
+                  min="0"
+                  max="70"
+                  value={yearsOfExperience}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      setYearsOfExperience('');
+                    } else {
+                      const numValue = parseInt(value, 10);
+                      if (!isNaN(numValue) && numValue >= 0 && numValue <= 70) {
+                        setYearsOfExperience(numValue);
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  placeholder="Enter years of experience / הכנס שנות ותק"
+                  required
+                />
+                <div className="text-xs text-gray-500 mt-1">
+                  How many years have you been working in your field?
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Work Regions / אזורי עבודה
+              </label>
+              <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {workRegions.map((region, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+                    >
+                      {region}
+                      <button
+                        onClick={() => removeWorkRegion(region)}
+                        className="text-indigo-500 hover:text-indigo-700 font-bold transition"
+                        title="Remove region"
                       >
-                        {r}
-                        <button
-                          onClick={() => setRoles(roles.filter(role => role !== r))}
-                          className="text-indigo-500 hover:text-indigo-700 font-bold transition"
-                          title="Remove role"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="relative">
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="relative">
+                  <div className="w-full py-1 flex items-center justify-between">
                     <input
                       type="text"
                       className="w-full focus:outline-none"
-                      placeholder="Search or type a role... / חפש או הקלד תפקיד"
-                      value={roleInput}
-                      onChange={(e) => setRoleInput(e.target.value)}
+                      placeholder="חפש או בחר אזורי עבודה"
+                      value={regionSearchTerm}
+                      onChange={(e) => {
+                        setRegionSearchTerm(e.target.value);
+                        setShowRegionDropdown(true);
+                      }}
+                      onClick={() => setShowRegionDropdown(true)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && roleInput.trim()) {
+                        if (e.key === 'Enter') {
                           e.preventDefault();
-                          const matched = allRoles.find(role =>
-                            role.toLowerCase() === roleInput.trim().toLowerCase()
-                          );
-                          const roleToAdd = matched || roleInput.trim();
-                          if (!roles.includes(roleToAdd)) {
-                            setRoles([...roles, roleToAdd]);
-                          }
-                          setRoleInput('');
+                          addCustomRegion();
                         }
                       }}
                     />
-                    
-                    {roleInput.trim() !== '' && (
-                      <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
-                        {allRoles
-                          .filter(role => 
-                            role.toLowerCase().includes(roleInput.toLowerCase())
-                          )
-                          .map((role, idx) => (
-                            <div
-                              key={idx}
-                              className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50 ${
-                                roles.includes(role) ? 'text-gray-400' : 'text-gray-900'
-                              }`}
+                    {regionSearchTerm && (
+                      <button
+                        onClick={() => setRegionSearchTerm('')}
+                        className="text-gray-400 hover:text-gray-600 transition"
+                      >
+                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {showRegionDropdown && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+                      {Object.keys(getFilteredRegions()).length === 0 ? (
+                        <div 
+                          className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
+                          onClick={addCustomRegion}
+                        >
+                          Add "{regionSearchTerm}" as custom location
+                        </div>
+                      ) : (
+                        Object.entries(getFilteredRegions()).map(([region, cities]) => (
+                          <div key={region}>
+                            <div 
+                              className="cursor-pointer select-none relative py-2 pl-3 pr-9 font-medium text-gray-900 hover:bg-indigo-50"
                               onClick={() => {
-                                if (!roles.includes(role)) {
-                                  setRoles([...roles, role]);
-                                  setRoleInput('');
-                                }
+                                addWorkRegion(region);
+                                setRegionSearchTerm('');
                               }}
                             >
-                              <span className="block truncate">
-                                {role}
-                              </span>
-                              {roles.includes(role) && (
-                                <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-600">
-                                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                </span>
-                              )}
+                              {region}
                             </div>
-                          ))}
-                        {allRoles.filter(role => 
+                            {cities.map((city, idx) => (
+                              <div 
+                                key={idx}
+                                className="cursor-pointer select-none relative py-2 pl-8 pr-9 text-gray-700 hover:bg-indigo-50"
+                                onClick={() => {
+                                  addWorkRegion(`${region} - ${city}`);
+                                  setRegionSearchTerm('');
+                                }}
+                              >
+                                {city}
+                              </div>
+                            ))}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Search for locations or select from the list. Press Enter to add a custom location.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Your Roles / תפקידים</label>
+              <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {roles.map((r, idx) => (
+                    <span
+                      key={idx}
+                      className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+                    >
+                      {r}
+                      <button
+                        onClick={() => setRoles(roles.filter(role => role !== r))}
+                        className="text-indigo-500 hover:text-indigo-700 font-bold transition"
+                        title="Remove role"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full focus:outline-none"
+                    placeholder="Search or type a role... / חפש או הקלד תפקיד"
+                    value={roleInput}
+                    onChange={(e) => setRoleInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && roleInput.trim()) {
+                        e.preventDefault();
+                        const matched = allRoles.find(role =>
+                          role.toLowerCase() === roleInput.trim().toLowerCase()
+                        );
+                        const roleToAdd = matched || roleInput.trim();
+                        if (!roles.includes(roleToAdd)) {
+                          setRoles([...roles, roleToAdd]);
+                        }
+                        setRoleInput('');
+                      }
+                    }}
+                  />
+                  
+                  {roleInput.trim() !== '' && (
+                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+                      {allRoles
+                        .filter(role => 
                           role.toLowerCase().includes(roleInput.toLowerCase())
-                        ).length === 0 && (
-                          <div className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
+                        )
+                        .map((role, idx) => (
+                          <div
+                            key={idx}
+                            className={`cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-indigo-50 ${
+                              roles.includes(role) ? 'text-gray-400' : 'text-gray-900'
+                            }`}
                             onClick={() => {
-                              if (!roles.includes(roleInput.trim()) && roleInput.trim() !== '') {
-                                setRoles([...roles, roleInput.trim()]);
+                              if (!roles.includes(role)) {
+                                setRoles([...roles, role]);
                                 setRoleInput('');
                               }
                             }}
                           >
-                            <span className="block truncate font-medium">
-                              Add "{roleInput}" as a custom role
+                            <span className="block truncate">
+                              {role}
                             </span>
+                            {roles.includes(role) && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-600">
+                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="mt-3 text-sm text-gray-500">
-                  Search for roles, click on suggestions, or add your own custom role
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image / תמונת פרופיל</label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition cursor-pointer" onClick={() => document.getElementById('file-upload')?.click()}>
-                  <div className="space-y-1 text-center">
-                    {previewUrl ? (
-                      <div className="flex flex-col items-center">
-                        <img src={previewUrl} alt="Preview" className="h-32 w-32 object-cover rounded-full mb-3" />
-                        <p className="text-sm text-indigo-600">Click to change image</p>
-                      </div>
-                    ) : (
-                      <>
-                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <div className="flex text-sm text-gray-600">
-                          <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                            <span>Upload a file</span>
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
+                        ))}
+                      {allRoles.filter(role => 
+                        role.toLowerCase().includes(roleInput.toLowerCase())
+                      ).length === 0 && (
+                        <div className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
+                          onClick={() => {
+                            if (!roles.includes(roleInput.trim()) && roleInput.trim() !== '') {
+                              setRoles([...roles, roleInput.trim()]);
+                              setRoleInput('');
+                            }
+                          }}
+                        >
+                          <span className="block truncate font-medium">
+                            Add "{roleInput}" as a custom role
+                          </span>
                         </div>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                      </>
-                    )}
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      className="sr-only"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                    />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mt-3 text-sm text-gray-500">
+                Search for roles, click on suggestions, or add your own custom role
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Work Gallery / גלריית עבודות (אופציונלי)
+              </label>
+              <div className="mt-1 flex flex-col space-y-4">
+                {/* Gallery preview */}
+                {galleryPreviews.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {galleryPreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img 
+                          src={preview} 
+                          alt={`Gallery image ${index + 1}`} 
+                          className="h-32 w-full object-cover rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryFile(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
+                )}
+                
+                {/* Upload button */}
+                {galleryFiles.length < 5 && (
+                  <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="space-y-1 text-center">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="gallery-upload"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none"
+                        >
+                          <span>Upload gallery images</span>
+                          <input
+                            id="gallery-upload"
+                            name="gallery-upload"
+                            type="file"
+                            className="sr-only"
+                            multiple
+                            accept="image/*"
+                            onChange={handleGalleryFileSelect}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 10MB (max 5 images)
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-xs text-gray-500">
+                  Upload up to 5 images showcasing your work. This will help clients understand your style and quality.
                 </div>
               </div>
             </div>
-          )}
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <div className="mt-8 flex justify-between">
-            {step > 1 ? (
-              <button
-                onClick={prevStep}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
-              >
-                Back / חזור
-              </button>
-            ) : (
-              <div></div>
-            )}
-            
-            {step < 3 ? (
-              <button
-                onClick={nextStep}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
-              >
-                Next / הבא
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isLoading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  'Complete / סיים'
-                )}
-              </button>
-            )}
           </div>
+        )}
+
+        {step === 4 && (
+          <div>
+            <div className="mb-6">
+              <label htmlFor="about-me" className="block text-sm font-medium text-gray-700 mb-1">
+                About Me / על עצמי
+              </label>
+              <textarea
+                id="about-me"
+                rows={6}
+                value={aboutMe}
+                onChange={(e) => setAboutMe(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                placeholder="Tell potential clients about yourself, your experience, and what makes your services unique..."
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Share your expertise, specialties, and approach to your work</span>
+                <span>{aboutMe.length}/500</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image / תמונת פרופיל</label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-500 transition cursor-pointer" onClick={() => document.getElementById('file-upload')?.click()}>
+                <div className="space-y-1 text-center">
+                  {previewUrl ? (
+                    <div className="flex flex-col items-center">
+                      <img src={previewUrl} alt="Preview" className="h-32 w-32 object-cover rounded-full mb-3" />
+                      <p className="text-sm text-indigo-600">Click to change image</p>
+                    </div>
+                  ) : (
+                    <>
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <div className="flex text-sm text-gray-600">
+                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                          <span>Upload a file</span>
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    </>
+                  )}
+                  <input
+                    id="file-upload"
+                    name="file-upload"
+                    type="file"
+                    className="sr-only"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 flex justify-between">
+          {step > 1 ? (
+            <button
+              onClick={prevStep}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+            >
+              Back / חזור
+            </button>
+          ) : (
+            <div></div>
+          )}
+          
+          {step < 5 ? (
+            <button
+              onClick={nextStep}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+            >
+              Next / הבא
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                'Complete / סיים'
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

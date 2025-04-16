@@ -7,6 +7,12 @@ export type UserProfile = {
   avatar: string;
   roles: string[];
   projects: string[];
+  phoneNumber: string;
+  yearsOfExperience: number;
+  workRegions: string[];
+  imageUrl: string;
+  galleryUrls?: string[];
+  aboutMe?: string;
 };
 
 export async function createUserProfile(profile: UserProfile): Promise<void> {
