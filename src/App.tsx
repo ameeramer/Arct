@@ -6,6 +6,7 @@ import { getDoc, doc } from 'firebase/firestore';
 import { db } from './services/firebase';
 // import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
+import UserTypeSelectionPage from './pages/UserTypeSelectionPage';
 // import NewProjectPage from './pages/new-project/StartPage';
 // import NewProjectGreeting from './pages/new-project/GreetingPage';
 // import NewProjectChat from './pages/new-project/ChatPage';
@@ -54,24 +55,17 @@ function AppContent() {
   return (
     <>
       <Routes>
+        <Route path="/" element={<UserTypeSelectionPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register/:userType" element={<LoginPage />} />
         <Route
-          path="/"
-          element={user ? <ProfileDashboardPage /> : <Navigate to="/login" replace />}
+          path="/complete-signup"
+          element={user ? <CompleteSignupPage /> : <Navigate to="/login" />}
         />
         <Route
-          path="/login"
-          element={!user ? <LoginPage /> : <Navigate to="/" replace />}
+          path="/dashboard"
+          element={user ? <ProfileDashboardPage /> : <Navigate to="/login" />}
         />
-        {/* <Route path="/new-project" element={<NewProjectPage />} />
-        <Route path="/new-project/greeting" element={<NewProjectGreeting />} />
-        <Route path="/new-project/chat" element={<NewProjectChat />} />
-        <Route path="/project/:id" element={<ProjectPage />} />
-        <Route path="/projects/:projectId/submit-quote" element={<SubmitQuotePage />} /> */}
-        <Route path="/complete-signup" element={<CompleteSignupPage />} />
-        {/* <Route path="/explore" element={<ExploreProjectsPage />} />
-        <Route path="/quote/:id" element={<QuotePage />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/chat/:chatId" element={<ChatPage />} /> */}
         <Route path="/profile" element={<ProfileDashboardPage />} />
       </Routes>
       
