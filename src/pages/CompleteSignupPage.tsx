@@ -441,7 +441,137 @@ const allRolesData = [
 //remove duplicates
 const allRoles = [...new Set(allRolesData)];
 
+// Translation data
+const translations = {
+  he: {
+    title: "השלם את הפרופיל שלך",
+    subtitle: "בואו נגדיר את הפרופיל המקצועי שלך",
+    steps: ["מידע בסיסי", "תפקידים", "גלריה", "על עצמי", "תמונה"],
+    fullName: "שם מלא",
+    phoneNumber: "מספר טלפון",
+    phoneFormat: "פורמט: 05X ולאחריו 7 ספרות",
+    experience: "שנות ותק",
+    experienceQuestion: "כמה שנים אתה עובד בתחום שלך?",
+    workRegions: "אזורי עבודה",
+    searchRegions: "חפש או בחר אזורי עבודה",
+    customLocation: "הוסף \"{term}\" כמיקום מותאם אישית",
+    loadingRegions: "טוען אזורים...",
+    regionsHelp: "חפש מיקומים או בחר מהרשימה. לחץ Enter להוספת מיקום מותאם אישית.",
+    roles: "תפקידים",
+    searchRoles: "חפש או הקלד תפקיד",
+    customRole: "הוסף \"{term}\" כתפקיד מותאם אישית",
+    rolesHelp: "חפש תפקידים, לחץ על הצעות, או הוסף תפקיד מותאם אישית",
+    gallery: "גלריית עבודות (אופציונלי)",
+    uploadGallery: "העלה תמונות לגלריה",
+    dragDrop: "או גרור ושחרר",
+    imageFormat: "PNG, JPG, GIF עד 10MB (מקסימום 5 תמונות)",
+    galleryHelp: "העלה עד 5 תמונות המציגות את העבודה שלך. זה יעזור ללקוחות להבין את הסגנון והאיכות שלך.",
+    aboutMe: "על עצמי",
+    aboutMePlaceholder: "ספר ללקוחות פוטנציאליים על עצמך, הניסיון שלך, ומה הופך את השירותים שלך לייחודיים...",
+    aboutMeHelp: "שתף את המומחיות, ההתמחויות והגישה שלך לעבודה",
+    profileImage: "תמונת פרופיל (אופציונלי)",
+    uploadProfile: "העלה תמונת פרופיל",
+    profileHelp: "אם לא תעלה תמונה, ייעשה שימוש באווטאר ברירת מחדל.",
+    back: "חזור",
+    next: "הבא",
+    complete: "סיים",
+    processing: "מעבד...",
+    requiredFields: "אנא מלא את כל השדות הנדרשים.",
+    invalidPrefix: "אנא הזן קידומת טלפון ישראלית תקפה (05x או 07x)",
+    invalidNumber: "אנא הזן מספר טלפון תקף בן 7 ספרות",
+    enterName: "אנא הזן את שמך",
+    enterPhone: "אנא הזן את מספר הטלפון שלך",
+    selectRole: "אנא בחר לפחות תפקיד אחד"
+  },
+  ar: {
+    title: "أكمل ملفك الشخصي",
+    subtitle: "دعنا نعد ملفك المهني",
+    steps: ["معلومات أساسية", "الأدوار", "معرض", "عني", "صورة"],
+    fullName: "الاسم الكامل",
+    phoneNumber: "رقم الهاتف",
+    phoneFormat: "التنسيق: 05X متبوعًا بـ 7 أرقام",
+    experience: "سنوات الخبرة",
+    experienceQuestion: "كم سنة عملت في مجالك؟",
+    workRegions: "مناطق العمل",
+    searchRegions: "ابحث أو اختر مناطق العمل",
+    customLocation: "أضف \"{term}\" كموقع مخصص",
+    loadingRegions: "جاري تحميل المناطق...",
+    regionsHelp: "ابحث عن المواقع أو اختر من القائمة. اضغط Enter لإضافة موقع مخصص.",
+    roles: "الأدوار",
+    searchRoles: "ابحث أو اكتب دورًا",
+    customRole: "أضف \"{term}\" كدور مخصص",
+    rolesHelp: "ابحث عن الأدوار، انقر على الاقتراحات، أو أضف دورًا مخصصًا",
+    gallery: "معرض الأعمال (اختياري)",
+    uploadGallery: "تحميل صور المعرض",
+    dragDrop: "أو اسحب وأفلت",
+    imageFormat: "PNG، JPG، GIF حتى 10 ميجابايت (بحد أقصى 5 صور)",
+    galleryHelp: "قم بتحميل ما يصل إلى 5 صور تعرض عملك. سيساعد ذلك العملاء على فهم أسلوبك وجودتك.",
+    aboutMe: "عني",
+    aboutMePlaceholder: "أخبر العملاء المحتملين عن نفسك وخبرتك وما يجعل خدماتك فريدة...",
+    aboutMeHelp: "شارك خبرتك وتخصصاتك ونهجك في العمل",
+    profileImage: "صورة الملف الشخصي (اختياري)",
+    uploadProfile: "تحميل صورة الملف الشخصي",
+    profileHelp: "إذا لم تقم بتحميل صورة، سيتم استخدام الصورة الرمزية الافتراضية.",
+    back: "رجوع",
+    next: "التالي",
+    complete: "إكمال",
+    processing: "جاري المعالجة...",
+    requiredFields: "يرجى ملء جميع الحقول المطلوبة.",
+    invalidPrefix: "الرجاء إدخال بادئة هاتف إسرائيلية صالحة (05x أو 07x)",
+    invalidNumber: "الرجاء إدخال رقم هاتف صالح مكون من 7 أرقام",
+    enterName: "الرجاء إدخال اسمك",
+    enterPhone: "الرجاء إدخال رقم هاتفك",
+    selectRole: "الرجاء تحديد دور واحد على الأقل"
+  },
+  en: {
+    title: "Complete Your Profile",
+    subtitle: "Let's set up your professional profile",
+    steps: ["Basic Info", "Roles", "Gallery", "About Me", "Photo"],
+    fullName: "Full Name",
+    phoneNumber: "Phone Number",
+    phoneFormat: "Format: 05X followed by 7 digits",
+    experience: "Years of Experience",
+    experienceQuestion: "How many years have you been working in your field?",
+    workRegions: "Work Regions",
+    searchRegions: "Search or select work regions",
+    customLocation: "Add \"{term}\" as custom location",
+    loadingRegions: "Loading regions...",
+    regionsHelp: "Search for locations or select from the list. Press Enter to add a custom location.",
+    roles: "Your Roles",
+    searchRoles: "Search or type a role...",
+    customRole: "Add \"{term}\" as a custom role",
+    rolesHelp: "Search for roles, click on suggestions, or add your own custom role",
+    gallery: "Work Gallery (Optional)",
+    uploadGallery: "Upload gallery images",
+    dragDrop: "or drag and drop",
+    imageFormat: "PNG, JPG, GIF up to 10MB (max 5 images)",
+    galleryHelp: "Upload up to 5 images showcasing your work. This will help clients understand your style and quality.",
+    aboutMe: "About Me",
+    aboutMePlaceholder: "Tell potential clients about yourself, your experience, and what makes your services unique...",
+    aboutMeHelp: "Share your expertise, specialties, and approach to your work",
+    profileImage: "Profile Image (Optional)",
+    uploadProfile: "Upload a profile image",
+    profileHelp: "If you don't upload an image, a default avatar will be used.",
+    back: "Back",
+    next: "Next",
+    complete: "Complete",
+    processing: "Processing...",
+    requiredFields: "Please fill all required fields.",
+    invalidPrefix: "Please enter a valid Israeli phone prefix (05x or 07x)",
+    invalidNumber: "Please enter a valid 7-digit phone number",
+    enterName: "Please enter your name",
+    enterPhone: "Please enter your phone number",
+    selectRole: "Please select at least one role"
+  }
+};
+
 export default function CompleteSignupPage() {
+  // Add language state
+  const [language, setLanguage] = useState<'he' | 'ar' | 'en'>('he');
+  
+  // Get translations based on selected language
+  const t = translations[language];
+  
   const [name, setName] = useState('');
   const [phonePrefix, setPhonePrefix] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -752,12 +882,37 @@ export default function CompleteSignupPage() {
   }, [showRegionDropdown]);
 
   return (
-    <div className="pb-20 sm:pb-40 min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center"
+      dir={language === 'en' ? 'ltr' : 'rtl'}
+    >
+      {/* Language selector */}
+      <div className="absolute top-20 right-4 flex space-x-2">
+        <button 
+          onClick={() => setLanguage('he')} 
+          className={`px-3 py-1 rounded-md ${language === 'he' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'}`}
+        >
+          עברית
+        </button>
+        <button 
+          onClick={() => setLanguage('ar')} 
+          className={`px-3 py-1 rounded-md ${language === 'ar' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'}`}
+        >
+          العربية
+        </button>
+        <button 
+          onClick={() => setLanguage('en')} 
+          className={`px-3 py-1 rounded-md ${language === 'en' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'}`}
+        >
+          English
+        </button>
+      </div>
+      
       <div className="max-w-md w-full mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
         <div className="mb-8">
-          <h2 className="text-center text-2xl font-bold text-gray-800">Complete Your Profile</h2>
+          <h2 className="text-center text-2xl font-bold text-gray-800">{t.title}</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Let's set up your professional profile
+            {t.subtitle}
           </p>
         </div>
 
@@ -776,15 +931,7 @@ export default function CompleteSignupPage() {
                   {item}
                 </div>
                 <div className="text-xs mt-1 text-gray-500">
-                  {item === 1 
-                    ? 'Basic Info' 
-                    : item === 2 
-                    ? 'Roles' 
-                    : item === 3 
-                    ? 'Gallery' 
-                    : item === 4
-                    ? 'About Me'
-                    : 'Photo'}
+                  {t.steps[item-1]}
                 </div>
               </div>
             ))}
@@ -807,7 +954,7 @@ export default function CompleteSignupPage() {
           <div className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name / שם מלא
+                {t.fullName}
               </label>
               <input
                 id="name"
@@ -815,16 +962,17 @@ export default function CompleteSignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                placeholder="Enter your full name / הכנס שם מלא"
+                placeholder={t.fullName}
                 required
+                dir={language === 'en' ? 'ltr' : 'rtl'}
               />
             </div>
             
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number / מספר טלפון
+                {t.phoneNumber}
               </label>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2" style={{ direction: 'ltr' }}>
                 <div className="w-1/3">
                   <input
                     id="phone-prefix"
@@ -836,7 +984,7 @@ export default function CompleteSignupPage() {
                       setPhonePrefix(value);
                     }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                    placeholder="000"
+                    placeholder="050"
                     required
                     dir="ltr"
                   />
@@ -859,13 +1007,13 @@ export default function CompleteSignupPage() {
                 </div>
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Format: 05X followed by 7 digits
+                {t.phoneFormat}
               </div>
             </div>
             
             <div>
               <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
-                Years of Experience / שנות ותק
+                {t.experience}
               </label>
               <div className="relative">
                 <input
@@ -886,18 +1034,19 @@ export default function CompleteSignupPage() {
                     }
                   }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                  placeholder="Enter years of experience / הכנס שנות ותק"
+                  placeholder="0"
                   required
+                  dir="ltr"
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  How many years have you been working in your field?
+                  {t.experienceQuestion}
                 </div>
               </div>
             </div>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Work Regions / אזורי עבודה
+                {t.workRegions}
               </label>
               <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -922,7 +1071,7 @@ export default function CompleteSignupPage() {
                     <input
                       type="text"
                       className="w-full focus:outline-none"
-                      placeholder="חפש או בחר אזורי עבודה"
+                      placeholder={t.searchRegions}
                       value={regionSearchTerm}
                       onChange={(e) => {
                         setRegionSearchTerm(e.target.value);
@@ -935,6 +1084,7 @@ export default function CompleteSignupPage() {
                           addCustomRegion();
                         }
                       }}
+                      dir={language === 'en' ? 'ltr' : 'rtl'}
                     />
                     {regionSearchTerm && (
                       <button
@@ -949,17 +1099,17 @@ export default function CompleteSignupPage() {
                   </div>
                   
                   {showRegionDropdown && (
-                    <div className="pb-60 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
+                    <div className="pb-40 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
                       {isLoadingRegions ? (
                         <div className="py-2 px-3 text-gray-500">
-                          טוען אזורים...
+                          {t.loadingRegions}
                         </div>
                       ) : Object.keys(getFilteredRegions()).length === 0 ? (
                         <div 
                           className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
                           onClick={addCustomRegion}
                         >
-                          Add "{regionSearchTerm}" as custom location
+                          {t.customLocation.replace('{term}', regionSearchTerm)}
                         </div>
                       ) : (
                         Object.entries(getFilteredRegions()).map(([region, cities]) => (
@@ -993,7 +1143,7 @@ export default function CompleteSignupPage() {
                 </div>
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                Search for locations or select from the list. Press Enter to add a custom location.
+                {t.regionsHelp}
               </div>
             </div>
           </div>
@@ -1002,7 +1152,7 @@ export default function CompleteSignupPage() {
         {step === 2 && (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Your Roles / תפקידים</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.roles}</label>
               <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
                 <div className="flex flex-wrap gap-2 mb-2">
                   {roles.map((r, idx) => (
@@ -1025,7 +1175,7 @@ export default function CompleteSignupPage() {
                   <input
                     type="text"
                     className="w-full focus:outline-none"
-                    placeholder="Search or type a role... / חפש או הקלד תפקיד"
+                    placeholder={t.searchRoles}
                     value={roleInput}
                     onChange={(e) => setRoleInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -1041,6 +1191,7 @@ export default function CompleteSignupPage() {
                         setRoleInput('');
                       }
                     }}
+                    dir={language === 'en' ? 'ltr' : 'rtl'}
                   />
                   
                   {roleInput.trim() !== '' && (
@@ -1086,7 +1237,7 @@ export default function CompleteSignupPage() {
                           }}
                         >
                           <span className="block truncate font-medium">
-                            Add "{roleInput}" as a custom role
+                            {t.customRole.replace('{term}', roleInput)}
                           </span>
                         </div>
                       )}
@@ -1096,7 +1247,7 @@ export default function CompleteSignupPage() {
               </div>
               
               <div className="mt-3 text-sm text-gray-500">
-                Search for roles, click on suggestions, or add your own custom role
+                {t.rolesHelp}
               </div>
             </div>
           </div>
@@ -1106,7 +1257,7 @@ export default function CompleteSignupPage() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Work Gallery / גלריית עבודות (אופציונלי)
+                {t.gallery}
               </label>
               <div className="mt-1 flex flex-col space-y-4">
                 {/* Gallery preview */}
@@ -1153,12 +1304,12 @@ export default function CompleteSignupPage() {
                           strokeLinejoin="round"
                         />
                       </svg>
-                      <div className="flex text-sm text-gray-600">
+                      <div className="flex text-sm text-gray-600 justify-center">
                         <label
                           htmlFor="gallery-upload"
                           className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none"
                         >
-                          <span>Upload gallery images</span>
+                          <span>{t.uploadGallery}</span>
                           <input
                             id="gallery-upload"
                             name="gallery-upload"
@@ -1169,42 +1320,40 @@ export default function CompleteSignupPage() {
                             onChange={handleGalleryFileSelect}
                           />
                         </label>
-                        <p className="pl-1">or drag and drop</p>
+                        <p className="pl-1">{t.dragDrop}</p>
                       </div>
                       <p className="text-xs text-gray-500">
-                        PNG, JPG, GIF up to 10MB (max 5 images)
+                        {t.imageFormat}
                       </p>
                     </div>
                   </div>
                 )}
-                
-                <div className="text-xs text-gray-500">
-                  Upload up to 5 images showcasing your work. This will help clients understand your style and quality.
-                </div>
               </div>
+              <p className="mt-2 text-sm text-gray-500">
+                {t.galleryHelp}
+              </p>
             </div>
           </div>
         )}
 
         {step === 4 && (
-          <div>
-            <div className="mb-6">
+          <div className="space-y-6">
+            <div>
               <label htmlFor="about-me" className="block text-sm font-medium text-gray-700 mb-1">
-                About Me / על עצמי
+                {t.aboutMe}
               </label>
               <textarea
                 id="about-me"
                 rows={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                 value={aboutMe}
                 onChange={(e) => setAboutMe(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                placeholder="Tell potential clients about yourself, your experience, and what makes your services unique..."
-                dir="auto"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Share your expertise, specialties, and approach to your work</span>
-                <span>{aboutMe.length}/500</span>
-              </div>
+                placeholder={t.aboutMePlaceholder}
+                dir={language === 'en' ? 'ltr' : 'rtl'}
+              ></textarea>
+              <p className="mt-2 text-sm text-gray-500">
+                {t.aboutMeHelp}
+              </p>
             </div>
           </div>
         )}
@@ -1212,106 +1361,85 @@ export default function CompleteSignupPage() {
         {step === 5 && (
           <div className="space-y-6">
             <div>
-              <label htmlFor="profile-image" className="block text-sm font-medium text-gray-700 mb-1">
-                Profile Image (Optional) / תמונת פרופיל (אופציונלי)
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t.profileImage}
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-indigo-500 transition" onClick={() => document.getElementById('profile-upload')?.click()}>
-                <div className="space-y-1 text-center">
-                  {previewUrl ? (
-                    <div className="relative group">
-                      <img src={previewUrl} alt="Profile preview" className="mx-auto h-32 w-32 rounded-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            document.getElementById('profile-upload')?.click();
-                          }}
-                          className="bg-indigo-500 text-white rounded-full p-2 mx-1"
-                        >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFile(null);
-                            setPreviewUrl(null);
-                          }}
-                          className="bg-red-500 text-white rounded-full p-2 mx-1"
-                        >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <div className="mt-1 flex flex-col items-center space-y-4">
+                {previewUrl ? (
+                  <div className="relative group">
+                    <img 
+                      src={previewUrl} 
+                      alt="Profile preview" 
+                      className="h-40 w-40 object-cover rounded-full"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFile(null);
+                        setPreviewUrl(null);
+                      }}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <label htmlFor="profile-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                          <span>Upload a profile image</span>
-                          <input id="profile-upload" name="profile-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileSelect} />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                    </>
-                  )}
+                    </button>
+                  </div>
+                ) : (
+                  <div 
+                    className="flex justify-center items-center h-40 w-40 rounded-full bg-gray-100 cursor-pointer hover:bg-gray-200 transition"
+                    onClick={() => document.getElementById('profile-upload')?.click()}
+                  >
+                    <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-center">
+                  <label
+                    htmlFor="profile-upload"
+                    className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    {t.uploadProfile}
+                    <input
+                      id="profile-upload"
+                      name="profile-upload"
+                      type="file"
+                      className="sr-only"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                    />
+                  </label>
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                If you don't upload an image, a default avatar will be used.
+              <p className="mt-2 text-sm text-gray-500 text-center">
+                {t.profileHelp}
               </p>
             </div>
-            
-            {/* ... existing gallery upload code ... */}
           </div>
         )}
 
         <div className="mt-8 flex justify-between">
           {step > 1 ? (
             <button
+              type="button"
               onClick={prevStep}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+              className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
             >
-              Back / חזור
+              {t.back}
             </button>
           ) : (
             <div></div>
           )}
-          
-          {step < 5 ? (
-            <button
-              onClick={nextStep}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
-            >
-              Next / הבא
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : (
-                'Complete / סיים'
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={step === 5 ? handleSubmit : nextStep}
+            className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+            disabled={isLoading}
+          >
+            {isLoading ? t.processing : step === 5 ? t.complete : t.next}
+          </button>
         </div>
       </div>
     </div>
