@@ -883,11 +883,11 @@ export default function CompleteSignupPage() {
 
   return (
     <div 
-      className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center"
+      className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-20 px-4 sm:px-6 lg:px-8 flex flex-col justify-center"
       dir={language === 'en' ? 'ltr' : 'rtl'}
     >
       {/* Language selector */}
-      <div className="absolute top-16 right-4 flex space-x-2">
+      <div className="absolute top-4 right-4 flex space-x-2">
         <button 
           onClick={() => setLanguage('he')} 
           className={`px-3 py-1 rounded-md ${language === 'he' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'}`}

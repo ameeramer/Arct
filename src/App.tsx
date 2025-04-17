@@ -53,19 +53,6 @@ function AppContent() {
 
   return (
     <>
-      <div className="px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center bg-gray-100">
-        {user && (
-          <div className="text-sm sm:text-base text-gray-700">
-            Signed in as <strong>{user.email}</strong>
-            <button
-              onClick={() => signOut(auth)}
-              className="ml-4 px-3 py-1 sm:px-4 sm:py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm sm:text-base"
-            >
-              Logout
-            </button>
-          </div>
-        )}
-      </div>
       <Routes>
         <Route
           path="/"

@@ -229,7 +229,7 @@ export default function ProfileDashboardPage() {
   
   return (
     <div 
-      className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-20 px-4 sm:px-6 lg:px-8"
       dir={language === 'en' ? 'ltr' : 'rtl'}
     >
       {/* Language selector */}
