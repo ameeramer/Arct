@@ -737,7 +737,7 @@ export default function CompleteSignupPage() {
         aboutMe: aboutMe.trim() ? aboutMe : undefined,
         projects: [],
       });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       console.error(err);
       setError(err.message);
