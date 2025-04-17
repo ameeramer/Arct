@@ -45,3 +45,21 @@ export async function getUserProjectsByReference(userId: string): Promise<string
   }
   return [];
 }
+
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  const ref = doc(db, 'users', userId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    return snap.data() as UserProfile;
+  }
+  return null;
+}
+
+export async function updateUserProfile(profile: UserProfile): Promise<void> {
+  const ref = doc(db, 'users', profile.id);
+  await updateDoc(ref, {
+    name: profile.name,
+    phoneNumber: profile.phoneNumber,
+    // Add other fields as needed when expanding functionality
+  });
+}

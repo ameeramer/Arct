@@ -18,6 +18,7 @@ import QuotePage from './pages/QuotePage';
 import MessageIcon from './components/navbar/MessageIcon';
 import MessagesPage from './pages/MessagesPage';
 import ChatPage from './pages/ChatPage';
+import ProfileDashboardPage from './pages/ProfileDashboardPage';
 
 // Create a wrapper component that uses useLocation
 function AppContent() {
@@ -84,6 +85,7 @@ function AppContent() {
         <Route path="/quote/:id" element={<QuotePage />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/chat/:chatId" element={<ChatPage />} />
+        <Route path="/profile" element={<ProfileDashboardPage />} />
       </Routes>
       
       {/* Only show navbar if not on complete-signup page */}
@@ -99,11 +101,13 @@ function AppContent() {
           </Link>
           <MessageIcon />
           <button className="text-gray-700">
-            <img
-              src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
-              alt="Profile"
-              className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover"
-            />
+            <Link to="/profile">
+              <img
+                src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
+                alt="Profile"
+                className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover"
+              />
+            </Link>
           </button>
         </div>
       )}
