@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './services/firebase';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from './services/firebase';
