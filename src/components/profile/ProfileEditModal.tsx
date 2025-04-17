@@ -56,6 +56,16 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
   // Get translations based on selected language
   const t = translations[language];
   
+  // Get section title based on the section being edited
+  const getSectionTitle = () => {
+    switch(section) {
+      case 'personal':
+        return t.personalInfo;
+      default:
+        return t.personalInfo; // Default to personal info for now
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -82,6 +92,49 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
     }
   };
   
+  // Render different form content based on section
+  const renderFormContent = () => {
+    switch(section) {
+      case 'personal':
+      default:
+        return (
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                {t.fullName}
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                {t.phoneNumber}
+              </label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                required
+                pattern="05[0-9]{8}"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {t.phoneFormat}
+              </p>
+            </div>
+          </div>
+        );
+    }
+  };
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div 
@@ -91,7 +144,7 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">
-              {t.editProfile} - {t.personalInfo}
+              {t.editProfile} - {getSectionTitle()}
             </h2>
             <button 
               onClick={onClose}
@@ -110,39 +163,7 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
           )}
           
           <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t.fullName}
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t.phoneNumber}
-                </label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                  required
-                  pattern="05[0-9]{8}"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  {t.phoneFormat}
-                </p>
-              </div>
-            </div>
+            {renderFormContent()}
             
             <div className="mt-6 flex justify-end space-x-3">
               <button

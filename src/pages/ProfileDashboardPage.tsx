@@ -138,7 +138,7 @@ export default function ProfileDashboardPage() {
             const projectDetails = await Promise.all(projectPromises);
             
             // Filter out null values and update profile with project details
-            profileWithProjects.projectDetails = projectDetails.filter(Boolean);
+            profileWithProjects.projectDetails = projectDetails.filter(Boolean) as Project[];
           } catch (projectErr) {
             console.error('Error fetching projects:', projectErr);
             // Continue with profile without projects

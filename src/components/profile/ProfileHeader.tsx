@@ -56,6 +56,12 @@ export default function ProfileHeader({ profile, language, t, onEdit, onLogout }
             >
               {t.editProfile}
             </button>
+            <button
+              onClick={onLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+            >
+              {t.logout}
+            </button>
           </div>
         </div>
       </div>
