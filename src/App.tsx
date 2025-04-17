@@ -55,11 +55,10 @@ function AppContent() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<UserTypeSelectionPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register/:userType" element={<LoginPage />} />
+        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <UserTypeSelectionPage />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
+        <Route path="/register/:userType" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
         <Route
-          path="/complete-signup"
           element={user ? <CompleteSignupPage /> : <Navigate to="/login" />}
         />
         <Route
