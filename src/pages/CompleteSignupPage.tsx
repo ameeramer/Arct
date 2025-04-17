@@ -679,7 +679,7 @@ export default function CompleteSignupPage() {
 
   const handleSubmit = async () => {
     if (!name || roles.length === 0 || !phonePrefix || !phoneNumber || yearsOfExperience === '' || workRegions.length === 0 || auth.currentUser === null) {
-      setError('Please fill all required fields.');
+      setError(t.requiredFields);
       return;
     }
 
@@ -688,12 +688,12 @@ export default function CompleteSignupPage() {
     const numberRegex = /^\d{7}$/;
     
     if (!prefixRegex.test(phonePrefix)) {
-      setError('Please enter a valid Israeli phone prefix (05x or 07x)');
+      setError(t.invalidPrefix);
       return;
     }
     
     if (!numberRegex.test(phoneNumber)) {
-      setError('Please enter a valid 7-digit phone number');
+      setError(t.invalidNumber);
       return;
     }
 
@@ -770,32 +770,32 @@ export default function CompleteSignupPage() {
   const nextStep = () => {
     if (step === 1) {
       if (!name) {
-        setError('Please enter your name');
+        setError(t.enterName);
         return;
       }
       
       if (!phonePrefix || !phoneNumber) {
-        setError('Please enter your phone number');
+        setError(t.enterPhone);
         return;
       }
       
       // Validate phone prefix
       const prefixRegex = /^05\d$|^07\d$/;
       if (!prefixRegex.test(phonePrefix)) {
-        setError('Please enter a valid Israeli phone prefix (05x or 07x)');
+        setError(t.invalidPrefix);
         return;
       }
       
       // Validate phone number
       const numberRegex = /^\d{7}$/;
       if (!numberRegex.test(phoneNumber)) {
-        setError('Please enter a valid 7-digit phone number');
+        setError(t.invalidNumber);
         return;
       }
     }
     
     if (step === 2 && roles.length === 0) {
-      setError('Please select at least one role');
+      setError(t.selectRole);
       return;
     }
     setError('');
@@ -887,7 +887,7 @@ export default function CompleteSignupPage() {
       dir={language === 'en' ? 'ltr' : 'rtl'}
     >
       {/* Language selector */}
-      <div className="absolute top-20 right-4 flex space-x-2">
+      <div className="absolute top-16 right-4 flex space-x-2">
         <button 
           onClick={() => setLanguage('he')} 
           className={`px-3 py-1 rounded-md ${language === 'he' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'}`}

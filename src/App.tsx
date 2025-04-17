@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { auth } from './services/firebase';
@@ -19,10 +19,12 @@ import MessageIcon from './components/navbar/MessageIcon';
 import MessagesPage from './pages/MessagesPage';
 import ChatPage from './pages/ChatPage';
 
-export default function App() {
+// Create a wrapper component that uses useLocation
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const location = useLocation(); // Now this is safe to use
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -43,10 +45,13 @@ export default function App() {
     }
   }, [user]);
 
+  // Check if we should hide the navbar
+  const hideNavbar = location.pathname === '/complete-signup';
+
   if (loading) return <div className="p-4">Loading...</div>;
 
   return (
-    <Router>
+    <>
       <div className="px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center bg-gray-100">
         {user && (
           <div className="text-sm sm:text-base text-gray-700">
@@ -80,28 +85,37 @@ export default function App() {
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/chat/:chatId" element={<ChatPage />} />
       </Routes>
-      <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 sm:py-4 z-50">
-        {user && (
-          <>            
-            <button className="text-gray-700">
-              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
-              <PlusIcon className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
-            </Link>
-            <MessageIcon />
-            <button className="text-gray-700">
-              <img
-                src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
-                alt="Profile"
-                className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover"
-              />
-            </button>
-          </>
-        )}
-      </div>
+      
+      {/* Only show navbar if not on complete-signup page */}
+      {!hideNavbar && user && (
+        <div className="fixed bottom-0 left-0 w-full border-t border-gray-200 bg-white flex justify-around py-3 sm:py-4 z-50">
+          <button className="text-gray-700">
+            <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
+            <PlusIcon className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
+          </Link>
+          <MessageIcon />
+          <button className="text-gray-700">
+            <img
+              src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
+              alt="Profile"
+              className="h-6 w-6 sm:h-7 sm:w-7 rounded-full object-cover"
+            />
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Main App component that provides the Router context
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
