@@ -66,7 +66,6 @@ function AppContent() {
           path="/dashboard"
           element={user ? <ProfileDashboardPage /> : <Navigate to="/login" />}
         />
-        <Route path="/profile" element={<ProfileDashboardPage />} />
       </Routes>
       
       {/* Only show navbar if not on complete-signup page */}
@@ -82,7 +81,7 @@ function AppContent() {
           </Link>
           <MessageIcon /> */}
           <button className="text-gray-700">
-            <Link to="/profile">
+            <Link to="/dashboard">
               <img
                 src={avatarUrl || 'https://randomuser.me/api/portraits/women/44.jpg'}
                 alt="Profile"

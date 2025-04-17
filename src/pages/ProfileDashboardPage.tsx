@@ -128,6 +128,7 @@ export default function ProfileDashboardPage() {
         const userProfile = await getUserProfile(auth.currentUser.uid);
         
         if (!userProfile) {
+          navigate('/complete-signup');
           setError(t.error);
           setIsLoading(false);
           return;
