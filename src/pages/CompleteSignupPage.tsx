@@ -481,7 +481,8 @@ const translations = {
     invalidNumber: "אנא הזן מספר טלפון תקף בן 7 ספרות",
     enterName: "אנא הזן את שמך",
     enterPhone: "אנא הזן את מספר הטלפון שלך",
-    selectRole: "אנא בחר לפחות תפקיד אחד"
+    selectRole: "אנא בחר לפחות תפקיד אחד",
+    logout: "התנתק",
   },
   ar: {
     title: "أكمل ملفك الشخصي",
@@ -521,7 +522,8 @@ const translations = {
     invalidNumber: "الرجاء إدخال رقم هاتف صالح مكون من 7 أرقام",
     enterName: "الرجاء إدخال اسمك",
     enterPhone: "الرجاء إدخال رقم هاتفك",
-    selectRole: "الرجاء تحديد دور واحد على الأقل"
+    selectRole: "الرجاء تحديد دور واحد على الأقل",
+    logout: "تسجيل الخروج",
   },
   en: {
     title: "Complete Your Profile",
@@ -561,7 +563,8 @@ const translations = {
     invalidNumber: "Please enter a valid 7-digit phone number",
     enterName: "Please enter your name",
     enterPhone: "Please enter your phone number",
-    selectRole: "Please select at least one role"
+    selectRole: "Please select at least one role",
+    logout: "Logout",
   }
 };
 
@@ -881,12 +884,22 @@ export default function CompleteSignupPage() {
     };
   }, [showRegionDropdown]);
 
+  // Add logout handler
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div 
       className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 py-20 px-4 sm:px-6 lg:px-8 flex flex-col justify-center"
       dir={language === 'en' ? 'ltr' : 'rtl'}
     >
-      {/* Language selector */}
+      {/* Language selector and Logout button */}
       <div className="absolute top-4 right-4 flex space-x-2">
         <button 
           onClick={() => setLanguage('he')} 
@@ -905,6 +918,16 @@ export default function CompleteSignupPage() {
           className={`px-3 py-1 rounded-md ${language === 'en' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700'}`}
         >
           English
+        </button>
+      </div>
+      
+      {/* Logout button on the left side */}
+      <div className="absolute top-4 left-4">
+        <button 
+          onClick={handleLogout}
+          className="px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+        >
+          {t.logout}
         </button>
       </div>
       
