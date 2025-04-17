@@ -289,6 +289,7 @@ export default function ProfileDashboardPage() {
             t={t} 
             onEdit={() => openEditModal('personal')}
             onLogout={handleLogout}
+            onProfileUpdate={handleProfileUpdate}
           />
         </div>
         
