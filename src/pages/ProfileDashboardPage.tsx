@@ -7,6 +7,7 @@ import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileDetails from '../components/profile/ProfileDetails';
 import ProfileGallery from '../components/profile/ProfileGallery';
 import ProfileEditModal from '../components/profile/ProfileEditModal';
+import ProfileGalleryManager from '../components/profile/ProfileGalleryManager';
 
 // Define a new type that includes project details
 type UserProfileWithProjects = UserProfile & {
@@ -21,6 +22,8 @@ const translations = {
     error: "שגיאה בטעינת הפרופיל. אנא נסה שוב.",
     notLoggedIn: "אינך מחובר. אנא התחבר כדי לצפות באזור האישי.",
     editProfile: "ערוך פרופיל",
+    editRoles: "ערוך תפקידים",
+    editRegions: "ערוך אזורי עבודה",
     overview: "סקירה כללית",
     personalInfo: "פרטים אישיים",
     roles: "תפקידים",
@@ -35,7 +38,9 @@ const translations = {
     contactInfo: "פרטי התקשרות",
     phone: "טלפון",
     viewPublicProfile: "צפה בפרופיל הציבורי",
-    logout: "התנתק"
+    logout: "התנתק",
+    viewGallery: "צפה בגלריה",
+    manageGallery: "נהל גלריה",
   },
   ar: {
     title: "منطقتي الشخصية",
@@ -43,6 +48,8 @@ const translations = {
     error: "خطأ في تحميل الملف الشخصي. يرجى المحاولة مرة أخرى.",
     notLoggedIn: "أنت غير مسجل الدخول. يرجى تسجيل الدخول لعرض منطقتك الشخصية.",
     editProfile: "تعديل الملف الشخصي",
+    editRoles: "تعديل الأدوار",
+    editRegions: "تعديل المناطق",
     overview: "نظرة عامة",
     personalInfo: "معلومات شخصية",
     roles: "الأدوار",
@@ -57,7 +64,9 @@ const translations = {
     contactInfo: "معلومات الاتصال",
     phone: "الهاتف",
     viewPublicProfile: "عرض الملف الشخصي العام",
-    logout: "تسجيل الخروج"
+    logout: "تسجيل الخروج",
+    viewGallery: "عرض المعرض",
+    manageGallery: "إدارة المعرض",
   },
   en: {
     title: "My Dashboard",
@@ -66,6 +75,8 @@ const translations = {
     notLoggedIn: "You are not logged in. Please log in to view your dashboard.",
     editProfile: "Edit Profile",
     overview: "Overview",
+    editRoles: "Edit Roles",
+    editRegions: "Edit Regions",
     personalInfo: "Personal Information",
     roles: "Roles",
     regions: "Work Regions",
@@ -79,7 +90,9 @@ const translations = {
     contactInfo: "Contact Information",
     phone: "Phone",
     viewPublicProfile: "View Public Profile",
-    logout: "Logout"
+    logout: "Logout",
+    viewGallery: "View Gallery",
+    manageGallery: "Manage Gallery",
   }
 };
 
@@ -91,6 +104,7 @@ export default function ProfileDashboardPage() {
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSection, setEditSection] = useState<string>('');
+  const [showGalleryManager, setShowGalleryManager] = useState(false);
   
   const navigate = useNavigate();
   
@@ -177,6 +191,16 @@ export default function ProfileDashboardPage() {
   const handleProfileUpdate = (updatedProfile: UserProfileWithProjects) => {
     setProfile(updatedProfile);
     setShowEditModal(false);
+  };
+  
+  // Handle gallery update
+  const handleGalleryUpdate = (updatedGallery: string[]) => {
+    if (profile) {
+      setProfile({
+        ...profile,
+        galleryUrls: updatedGallery
+      });
+    }
   };
   
   if (isLoading) {
@@ -280,21 +304,31 @@ export default function ProfileDashboardPage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">{t.gallery}</h2>
                 <button 
-                  onClick={() => openEditModal('gallery')}
+                  onClick={() => setShowGalleryManager(!showGalleryManager)}
                   className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
                 >
-                  {t.editProfile}
+                  {showGalleryManager ? t.viewGallery || "View Gallery" : t.manageGallery || "Manage Gallery"}
                 </button>
               </div>
-              <ProfileGallery 
-                galleryUrls={profile.galleryUrls || []} 
-                t={t} 
-              />
+              
+              {showGalleryManager ? (
+                <ProfileGalleryManager 
+                  userId={profile.id}
+                  galleryUrls={profile.galleryUrls || []}
+                  language={language}
+                  onUpdate={handleGalleryUpdate}
+                />
+              ) : (
+                <ProfileGallery 
+                  galleryUrls={profile.galleryUrls || []} 
+                  t={t} 
+                />
+              )}
             </div>
           </div>
           
           <div className="md:col-span-1">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden p-6">
+            {/* <div className="bg-white rounded-xl shadow-md overflow-hidden p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">{t.contactInfo}</h2>
               <div className="space-y-3">
                 <div>
@@ -318,20 +352,20 @@ export default function ProfileDashboardPage() {
               ) : (
                 <p className="text-gray-500 text-sm">{t.noProjects}</p>
               )}
-            </div>
+            </div> */}
             
             <div className="mt-8 flex flex-col space-y-3">
-              <button 
+              {/* <button 
                 onClick={() => navigate(`/profile/${profile.id}`)}
                 className="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
               >
                 {t.viewPublicProfile}
-              </button>
+              </button> */}
               <button 
                 onClick={handleLogout}
-                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
+                className="w-full px-4 py-2 bg-white border border-red-300 text-gray-700 rounded-md hover:bg-gray-50 transition"
               >
-                {t.logout}
+                {t.logout} X
               </button>
             </div>
           </div>

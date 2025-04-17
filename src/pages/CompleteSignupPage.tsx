@@ -439,7 +439,7 @@ const allRolesData = [
 ];
 
 //remove duplicates
-const allRoles = [...new Set(allRolesData)];
+export const allRoles = [...new Set(allRolesData)];
 
 // Translation data
 const translations = {

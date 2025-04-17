@@ -47,7 +47,7 @@ export default function ProfileDetails({ profile, language, t, onEdit }: Profile
             onClick={() => onEdit('roles')}
             className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
           >
-            {t.editProfile}
+            {t.editRoles}
           </button>
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
@@ -75,7 +75,7 @@ export default function ProfileDetails({ profile, language, t, onEdit }: Profile
             onClick={() => onEdit('regions')}
             className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
           >
-            {t.editProfile}
+            {t.editRegions}
           </button>
         </div>
         <div className="bg-gray-50 rounded-lg p-4">

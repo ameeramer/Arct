@@ -4,20 +4,20 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './services/firebase';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from './services/firebase';
-import HomePage from './pages/HomePage';
+// import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import NewProjectPage from './pages/new-project/StartPage';
-import NewProjectGreeting from './pages/new-project/GreetingPage';
-import NewProjectChat from './pages/new-project/ChatPage';
-import ProjectPage from './pages/ProjectPage';
-import { PlusIcon } from '@heroicons/react/24/solid';
+// import NewProjectPage from './pages/new-project/StartPage';
+// import NewProjectGreeting from './pages/new-project/GreetingPage';
+// import NewProjectChat from './pages/new-project/ChatPage';
+// import ProjectPage from './pages/ProjectPage';
+// import { PlusIcon } from '@heroicons/react/24/solid';
 import CompleteSignupPage from './pages/CompleteSignupPage';
-import SubmitQuotePage from './pages/SubmitQuotePage';
-import ExploreProjectsPage from './pages/ExploreProjectsPage';
-import QuotePage from './pages/QuotePage';
-import MessageIcon from './components/navbar/MessageIcon';
-import MessagesPage from './pages/MessagesPage';
-import ChatPage from './pages/ChatPage';
+// import SubmitQuotePage from './pages/SubmitQuotePage';
+// import ExploreProjectsPage from './pages/ExploreProjectsPage';
+// import QuotePage from './pages/QuotePage';
+// import MessageIcon from './components/navbar/MessageIcon';
+// import MessagesPage from './pages/MessagesPage';
+// import ChatPage from './pages/ChatPage';
 import ProfileDashboardPage from './pages/ProfileDashboardPage';
 
 // Create a wrapper component that uses useLocation
@@ -56,22 +56,22 @@ function AppContent() {
       <Routes>
         <Route
           path="/"
-          element={user ? <HomePage /> : <Navigate to="/login" replace />}
+          element={user ? <ProfileDashboardPage /> : <Navigate to="/login" replace />}
         />
         <Route
           path="/login"
           element={!user ? <LoginPage /> : <Navigate to="/" replace />}
         />
-        <Route path="/new-project" element={<NewProjectPage />} />
+        {/* <Route path="/new-project" element={<NewProjectPage />} />
         <Route path="/new-project/greeting" element={<NewProjectGreeting />} />
         <Route path="/new-project/chat" element={<NewProjectChat />} />
         <Route path="/project/:id" element={<ProjectPage />} />
-        <Route path="/projects/:projectId/submit-quote" element={<SubmitQuotePage />} />
+        <Route path="/projects/:projectId/submit-quote" element={<SubmitQuotePage />} /> */}
         <Route path="/complete-signup" element={<CompleteSignupPage />} />
-        <Route path="/explore" element={<ExploreProjectsPage />} />
+        {/* <Route path="/explore" element={<ExploreProjectsPage />} />
         <Route path="/quote/:id" element={<QuotePage />} />
         <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/chat/:chatId" element={<ChatPage />} />
+        <Route path="/chat/:chatId" element={<ChatPage />} /> */}
         <Route path="/profile" element={<ProfileDashboardPage />} />
       </Routes>
       
@@ -83,10 +83,10 @@ function AppContent() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
+          {/* <Link to="/new-project" className="bg-gray-100 p-2 rounded-full shadow-md">
             <PlusIcon className="h-6 w-6 sm:h-7 sm:w-7 text-black" />
           </Link>
-          <MessageIcon />
+          <MessageIcon /> */}
           <button className="text-gray-700">
             <Link to="/profile">
               <img

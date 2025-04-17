@@ -1,5 +1,6 @@
-import { arrayUnion, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { arrayUnion, arrayRemove, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { deleteImage } from './storage';
 
 export type UserProfile = {
   id: string;
@@ -36,7 +37,6 @@ export async function addProjectToUser(userId: string, projectId: string): Promi
   });
 }
 
-
 export async function getUserProjectsByReference(userId: string): Promise<string[]> {
   const ref = doc(db, 'users', userId);
   const snap = await getDoc(ref);
@@ -50,16 +50,57 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   const ref = doc(db, 'users', userId);
   const snap = await getDoc(ref);
   if (snap.exists()) {
-    return snap.data() as UserProfile;
+    const profile = snap.data() as UserProfile;
+    profile.id = userId;
+    return profile;
   }
   return null;
 }
 
 export async function updateUserProfile(profile: UserProfile): Promise<void> {
   const ref = doc(db, 'users', profile.id);
-  await updateDoc(ref, {
+  
+  // Create an object with only the fields we want to update
+  const updateData: Partial<UserProfile> = {
     name: profile.name,
     phoneNumber: profile.phoneNumber,
+    yearsOfExperience: profile.yearsOfExperience,
+    aboutMe: profile.aboutMe,
+    roles: profile.roles,
+    workRegions: profile.workRegions,
     // Add other fields as needed when expanding functionality
+  };
+  
+  // Remove any undefined fields to prevent errors
+  Object.keys(updateData).forEach(key => {
+    if (updateData[key as keyof Partial<UserProfile>] === undefined) {
+      delete updateData[key as keyof Partial<UserProfile>];
+    }
   });
+  
+  await updateDoc(ref, updateData);
+}
+
+export async function addImageToGallery(userId: string, imageUrl: string): Promise<void> {
+  const ref = doc(db, 'users', userId);
+  await updateDoc(ref, {
+    galleryUrls: arrayUnion(imageUrl),
+  });
+}
+
+export async function removeImageFromGallery(userId: string, imageUrl: string): Promise<void> {
+  const ref = doc(db, 'users', userId);
+  
+  // Remove from Firestore
+  await updateDoc(ref, {
+    galleryUrls: arrayRemove(imageUrl),
+  });
+  
+  // Delete the image from storage
+  try {
+    await deleteImage(imageUrl);
+  } catch (error) {
+    console.error('Error deleting image from storage:', error);
+    // Continue even if storage deletion fails
+  }
 }
