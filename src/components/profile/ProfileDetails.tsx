@@ -85,7 +85,7 @@ export default function ProfileDetails({ profile, language, t, onEdit }: Profile
                 key={index} 
                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
               >
-                {region}
+                {region.name}
               </span>
             ))}
             {(!profile.workRegions || profile.workRegions.length === 0) && (

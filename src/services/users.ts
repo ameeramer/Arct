@@ -2,18 +2,18 @@ import { arrayUnion, arrayRemove, doc, getDoc, setDoc, updateDoc } from 'firebas
 import { db } from './firebase';
 import { deleteImage } from './storage';
 
-export type UserProfile = {
+export interface UserProfile {
   id: string;
-  name: string;
-  avatar: string;
-  roles: string[];
-  projects: string[];
-  phoneNumber: string;
-  yearsOfExperience: number;
-  workRegions: string[];
+  name?: string;
+  avatar?: string;
+  roles?: string[];
+  projects?: string[];
+  phoneNumber?: string;
+  yearsOfExperience?: number;
+  workRegions?: Array<{ name: string; place_id?: string }>;
   galleryUrls?: string[];
   aboutMe?: string;
-};
+}
 
 export async function createUserProfile(profile: UserProfile): Promise<void> {
   const ref = doc(db, 'users', profile.id);
@@ -24,7 +24,7 @@ export async function createUserProfile(profile: UserProfile): Promise<void> {
     projects: [],
     phoneNumber: profile.phoneNumber,
     yearsOfExperience: profile.yearsOfExperience,
-    workRegions: profile.workRegions,
+    workRegions: profile.workRegions || [],
     galleryUrls: profile.galleryUrls || [],
     aboutMe: profile.aboutMe || '',
   });

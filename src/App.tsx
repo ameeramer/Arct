@@ -59,6 +59,7 @@ function AppContent() {
         <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
         <Route path="/register/:userType" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
         <Route
+          path="/complete-signup"
           element={user ? <CompleteSignupPage /> : <Navigate to="/login" />}
         />
         <Route

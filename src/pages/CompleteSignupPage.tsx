@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { uploadImage } from '../services/storage';
 import { createUserProfile } from '../services/users';
 import { auth } from '../services/firebase';
+import GooglePlacesSearch from '../components/common/GooglePlacesSearch';
 
 const allRolesData = [
   // אדריכלות ועיצוב
@@ -568,6 +569,12 @@ const translations = {
   }
 };
 
+// הוספת ממשק לאזור עבודה
+interface WorkRegion {
+  name: string;
+  place_id?: string;
+}
+
 export default function CompleteSignupPage() {
   // Add language state
   const [language, setLanguage] = useState<'he' | 'ar' | 'en'>('he');
@@ -586,14 +593,11 @@ export default function CompleteSignupPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [workRegions, setWorkRegions] = useState<string[]>([]);
+  const [workRegions, setWorkRegions] = useState<WorkRegion[]>([]);
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
-  const [regionSearchTerm, setRegionSearchTerm] = useState('');
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [aboutMe, setAboutMe] = useState('');
-  const [israelRegionsData, setIsraelRegionsData] = useState<{[key: string]: string[]}>({});
-  const [isLoadingRegions, setIsLoadingRegions] = useState(true);
   const navigate = useNavigate();
   const regionDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -601,7 +605,6 @@ export default function CompleteSignupPage() {
   useEffect(() => {
     const fetchRegions = async () => {
       try {
-        setIsLoadingRegions(true);
         const response = await fetch('https://data.gov.il/api/action/datastore_search?resource_id=1bf27e56-364c-4b61-8b6b-efa9933da677', {
           method: 'GET'
         });
@@ -633,12 +636,10 @@ export default function CompleteSignupPage() {
             regions[region].sort();
           });
           
-          setIsraelRegionsData(regions);
         }
       } catch (error) {
         console.error('Error fetching regions:', error);
       } finally {
-        setIsLoadingRegions(false);
       }
     };
     
@@ -680,7 +681,9 @@ export default function CompleteSignupPage() {
     }
   }, [galleryFiles]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!name || roles.length === 0 || !phonePrefix || !phoneNumber || yearsOfExperience === '' || workRegions.length === 0 || auth.currentUser === null) {
       setError(t.requiredFields);
       return;
@@ -725,18 +728,21 @@ export default function CompleteSignupPage() {
       
       const fullPhoneNumber = `${phonePrefix}-${phoneNumber}`;
       
-      await createUserProfile({
+      // Create user profile
+      const userProfile = {
         id: auth.currentUser.uid,
         name,
         avatar: imageUrl,
         roles,
         phoneNumber: fullPhoneNumber,
         yearsOfExperience: Number(yearsOfExperience),
-        workRegions,
+        workRegions, // כעת זה מערך של אובייקטים
         galleryUrls: galleryUrls.length > 0 ? galleryUrls : undefined,
         aboutMe: aboutMe.trim() ? aboutMe : undefined,
         projects: [],
-      });
+      };
+      
+      await createUserProfile(userProfile);
       navigate('/dashboard');
     } catch (err: any) {
       console.error(err);
@@ -809,50 +815,8 @@ export default function CompleteSignupPage() {
     setStep(step - 1);
   };
 
-  const addWorkRegion = (region: string) => {
-    if (!workRegions.includes(region) && region.trim() !== '') {
-      setWorkRegions([...workRegions, region]);
-    }
-    setShowRegionDropdown(false);
-  };
-
-  const removeWorkRegion = (region: string) => {
-    setWorkRegions(workRegions.filter(r => r !== region));
-  };
-
-  // Function to filter regions and cities based on search term
-  const getFilteredRegions = () => {
-    if (!regionSearchTerm.trim()) {
-      return israelRegionsData;
-    }
-    
-    const searchLower = regionSearchTerm.toLowerCase();
-    const filteredRegions: Record<string, string[]> = {};
-    
-    Object.entries(israelRegionsData).forEach(([region, cities]) => {
-      // Check if region name matches
-      const regionMatches = region.toLowerCase().includes(searchLower);
-      
-      // Filter cities that match search term
-      const matchingCities = cities.filter(city => 
-        city.toLowerCase().includes(searchLower)
-      );
-      
-      // Include region if either the region name matches or it has matching cities
-      if (regionMatches || matchingCities.length > 0) {
-        filteredRegions[region] = regionMatches ? cities : matchingCities;
-      }
-    });
-    
-    return filteredRegions;
-  };
-
-  const addCustomRegion = () => {
-    if (regionSearchTerm.trim() && !workRegions.includes(regionSearchTerm.trim())) {
-      setWorkRegions([...workRegions, regionSearchTerm.trim()]);
-      setRegionSearchTerm('');
-      setShowRegionDropdown(false);
-    }
+  const removeWorkRegion = (regionName: string) => {
+    setWorkRegions(workRegions.filter(r => r.name !== regionName));
   };
 
   const removeGalleryFile = (index: number) => {
@@ -891,6 +855,25 @@ export default function CompleteSignupPage() {
       navigate('/login');
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  };
+
+  // פונקציה לטיפול בבחירת מיקום מ-Google Places
+  const handleWorkRegionSelect = (location: {
+    name: string;
+    coordinates: { longitude: number; latitude: number };
+    region?: string;
+    place?: string;
+    place_id?: string;
+  }) => {
+    const regionName = location.place || location.name;
+    
+    // בדיקה אם האזור כבר קיים ברשימה
+    if (!workRegions.some(r => r.name === regionName)) {
+      setWorkRegions([...workRegions, { 
+        name: regionName,
+        place_id: location.place_id
+      }]);
     }
   };
 
@@ -1071,103 +1054,36 @@ export default function CompleteSignupPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.workRegions}
               </label>
-              <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {workRegions.map((region, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+              
+              {/* הצגת אזורי העבודה שנבחרו */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {workRegions.map((region, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+                  >
+                    {region.name}
+                    <button
+                      onClick={() => removeWorkRegion(region.name)}
+                      className="text-indigo-500 hover:text-indigo-700 font-bold transition"
+                      title="Remove region"
                     >
-                      {region}
-                      <button
-                        onClick={() => removeWorkRegion(region)}
-                        className="text-indigo-500 hover:text-indigo-700 font-bold transition"
-                        title="Remove region"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <div className="relative" ref={regionDropdownRef}>
-                  <div className="w-full py-1 flex items-center justify-between">
-                    <input
-                      type="text"
-                      className="w-full focus:outline-none"
-                      placeholder={t.searchRegions}
-                      value={regionSearchTerm}
-                      onChange={(e) => {
-                        setRegionSearchTerm(e.target.value);
-                        setShowRegionDropdown(true);
-                      }}
-                      onClick={() => setShowRegionDropdown(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addCustomRegion();
-                        }
-                      }}
-                      dir={language === 'en' ? 'ltr' : 'rtl'}
-                    />
-                    {regionSearchTerm && (
-                      <button
-                        onClick={() => setRegionSearchTerm('')}
-                        className="text-gray-400 hover:text-gray-600 transition"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                  
-                  {showRegionDropdown && (
-                    <div className="pb-40 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
-                      {isLoadingRegions ? (
-                        <div className="py-2 px-3 text-gray-500">
-                          {t.loadingRegions}
-                        </div>
-                      ) : Object.keys(getFilteredRegions()).length === 0 ? (
-                        <div 
-                          className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
-                          onClick={addCustomRegion}
-                        >
-                          {t.customLocation.replace('{term}', regionSearchTerm)}
-                        </div>
-                      ) : (
-                        Object.entries(getFilteredRegions()).map(([region, cities]) => (
-                          <div key={region}>
-                            <div 
-                              className="cursor-pointer select-none relative py-2 pl-3 pr-9 font-medium text-gray-900 hover:bg-indigo-50"
-                              onClick={() => {
-                                addWorkRegion(region);
-                                setRegionSearchTerm('');
-                              }}
-                            >
-                              {region}
-                            </div>
-                            {cities.map((city, idx) => (
-                              <div 
-                                key={idx}
-                                className="cursor-pointer select-none relative py-2 pl-8 pr-9 text-gray-700 hover:bg-indigo-50"
-                                onClick={() => {
-                                  addWorkRegion(`${region} - ${city}`);
-                                  setRegionSearchTerm('');
-                                }}
-                              >
-                                {city}
-                              </div>
-                            ))}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
+                      ×
+                    </button>
+                  </span>
+                ))}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              
+              {/* חיפוש אזורי עבודה באמצעות Google Places */}
+              <GooglePlacesSearch
+                language={language}
+                onSelectLocation={handleWorkRegionSelect}
+                placeholder={t.searchRegions}
+              />
+              
+              <p className="mt-1 text-xs text-gray-500">
                 {t.regionsHelp}
-              </div>
+              </p>
             </div>
           </div>
         )}

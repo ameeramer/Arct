@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { UserProfile } from '../../services/users';
 import { updateUserProfile } from '../../services/users';
 import { allRoles } from '../../pages/CompleteSignupPage';
+import GooglePlacesSearch from '../common/GooglePlacesSearch';
 
 interface ProfileEditModalProps {
   profile: UserProfile;
@@ -87,6 +88,12 @@ const translations = {
     }
   };
 
+// עדכון הממשק של אזורי עבודה כדי לכלול place_id
+interface WorkRegion {
+  name: string;
+  place_id?: string;
+}
+
 export default function ProfileEditModal({ profile, section, language, onClose, onUpdate }: ProfileEditModalProps) {
   const [name, setName] = useState(profile.name || '');
   
@@ -104,13 +111,25 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
   const [roles, setRoles] = useState<string[]>(profile.roles || []);
   const [roleInput, setRoleInput] = useState('');
   
-  // Add state for work regions
-  const [workRegions, setWorkRegions] = useState<string[]>(profile.workRegions || []);
-  const [showRegionDropdown, setShowRegionDropdown] = useState(false);
-  const [regionSearchTerm, setRegionSearchTerm] = useState('');
-  const [israelRegionsData, setIsraelRegionsData] = useState<{[key: string]: string[]}>({});
-  const [isLoadingRegions, setIsLoadingRegions] = useState(true);
-  const regionDropdownRef = useRef<HTMLDivElement>(null);
+  // שינוי סוג המשתנה workRegions
+  const [workRegions, setWorkRegions] = useState<WorkRegion[]>(
+    profile.workRegions ? 
+      (Array.isArray(profile.workRegions) ? 
+        // המרת מערך מחרוזות למערך אובייקטים אם צריך
+        profile.workRegions.map(region => 
+          typeof region === 'string' ? 
+            { name: region } : 
+            region
+        ) : 
+        []
+      ) : 
+      []
+  );
+  
+  // Add state for region and city
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   // Initialize phone fields when component mounts
   useEffect(() => {
@@ -123,122 +142,32 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
     }
   }, [profile.phoneNumber]);
   
-  // Fetch regions from data.gov.il API
-  useEffect(() => {
-    const fetchRegions = async () => {
-      try {
-        setIsLoadingRegions(true);
-        const response = await fetch('https://data.gov.il/api/action/datastore_search?resource_id=1bf27e56-364c-4b61-8b6b-efa9933da677', {
-          method: 'GET'
-        });
-
-        const data = await response.json();
-        if (data.success && data.result.records) {
-          // Group cities by region (MACHOZ)
-          const regions: {[key: string]: string[]} = {};
-          
-          data.result.records.forEach((record: any) => {
-            const region = record.MACHOZ;
-            const city = record.HEBREW_NAME;
-            
-            if (region && city) {
-              if (!regions[region]) {
-                regions[region] = [];
-              }
-              
-              // Only add the city if it's not already in the array
-              if (!regions[region].includes(city)) {
-                regions[region].push(city);
-              }
-            }
-          });
-          
-          // Sort cities alphabetically within each region
-          Object.keys(regions).forEach(region => {
-            regions[region].sort();
-          });
-          
-          setIsraelRegionsData(regions);
-        }
-      } catch (error) {
-        console.error('Error fetching regions:', error);
-      } finally {
-        setIsLoadingRegions(false);
-      }
-    };
-    
-    fetchRegions();
-  }, []);
-  
-  // Add click outside handler to close dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (regionDropdownRef.current && !regionDropdownRef.current.contains(event.target as Node)) {
-        setShowRegionDropdown(false);
-      }
-    }
-    
-    // Add event listener when dropdown is shown
-    if (showRegionDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    // Cleanup event listener
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showRegionDropdown]);
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  
   // Get translations based on selected language
   const t = translations[language];
   
-  // Function to filter regions and cities based on search term
-  const getFilteredRegions = () => {
-    if (!regionSearchTerm.trim()) {
-      return israelRegionsData;
+  // פונקציה לטיפול בבחירת מיקום מ-Google Places עבור אזורי עבודה
+  const handleWorkRegionSelect = (location: {
+    name: string;
+    coordinates: { longitude: number; latitude: number };
+    region?: string;
+    place?: string;
+    place_id?: string;
+  }) => {
+    // הוספת המיקום שנבחר לרשימת אזורי העבודה
+    const regionName = location.place || location.name;
+    
+    // בדיקה אם האזור כבר קיים ברשימה
+    if (!workRegions.some(r => r.name === regionName)) {
+      setWorkRegions([...workRegions, { 
+        name: regionName,
+        place_id: location.place_id
+      }]);
     }
-    
-    const searchLower = regionSearchTerm.toLowerCase();
-    const filteredRegions: Record<string, string[]> = {};
-    
-    Object.entries(israelRegionsData).forEach(([region, cities]) => {
-      // Check if region name matches
-      const regionMatches = region.toLowerCase().includes(searchLower);
-      
-      // Filter cities that match search term
-      const matchingCities = cities.filter(city => 
-        city.toLowerCase().includes(searchLower)
-      );
-      
-      // Include region if either the region name matches or it has matching cities
-      if (regionMatches || matchingCities.length > 0) {
-        filteredRegions[region] = regionMatches ? cities : matchingCities;
-      }
-    });
-    
-    return filteredRegions;
   };
   
-  const addWorkRegion = (region: string) => {
-    if (!workRegions.includes(region)) {
-      setWorkRegions([...workRegions, region]);
-    }
-    setShowRegionDropdown(false);
-  };
-  
-  const removeWorkRegion = (region: string) => {
-    setWorkRegions(workRegions.filter(r => r !== region));
-  };
-  
-  const addCustomRegion = () => {
-    if (regionSearchTerm.trim() && !workRegions.includes(regionSearchTerm.trim())) {
-      setWorkRegions([...workRegions, regionSearchTerm.trim()]);
-      setRegionSearchTerm('');
-      setShowRegionDropdown(false);
-    }
+  // פונקציה להסרת אזור עבודה
+  const removeWorkRegion = (regionName: string) => {
+    setWorkRegions(workRegions.filter(r => r.name !== regionName));
   };
   
   // Get section title based on the section being edited
@@ -251,7 +180,7 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
       case 'regions':
         return t.workRegions;
       default:
-        return t.personalInfo; // Default to personal info for now
+        return t.personalInfo;
     }
   };
   
@@ -294,7 +223,7 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
         yearsOfExperience: Number(yearsOfExperience),
         aboutMe,
         roles,
-        workRegions
+        workRegions // כעת זה מערך של אובייקטים עם name ו-place_id
       };
       
       console.log('Updating profile with ID:', updatedProfile.id);
@@ -322,106 +251,42 @@ export default function ProfileEditModal({ profile, section, language, onClose, 
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t.workRegions}
               </label>
-              <div className="w-full border border-gray-300 px-4 py-3 rounded-lg focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition">
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {workRegions.map((region, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+              
+              {/* הצגת אזורי העבודה שנבחרו */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {workRegions.map((region, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 transition hover:bg-indigo-200"
+                  >
+                    {region.name}
+                    <button
+                      onClick={() => removeWorkRegion(region.name)}
+                      className="text-indigo-500 hover:text-indigo-700 font-bold transition"
+                      title="Remove region"
                     >
-                      {region}
-                      <button
-                        onClick={() => removeWorkRegion(region)}
-                        className="text-indigo-500 hover:text-indigo-700 font-bold transition"
-                        title="Remove region"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <div className="relative" ref={regionDropdownRef}>
-                  <div className="w-full py-1 flex items-center justify-between">
-                    <input
-                      type="text"
-                      className="w-full focus:outline-none"
-                      placeholder={t.searchRegions}
-                      value={regionSearchTerm}
-                      onChange={(e) => {
-                        setRegionSearchTerm(e.target.value);
-                        setShowRegionDropdown(true);
-                      }}
-                      onClick={() => setShowRegionDropdown(true)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addCustomRegion();
-                        }
-                      }}
-                      dir={language === 'en' ? 'ltr' : 'rtl'}
-                    />
-                    {regionSearchTerm && (
-                      <button
-                        onClick={() => setRegionSearchTerm('')}
-                        className="text-gray-400 hover:text-gray-600 transition"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                  
-                  {showRegionDropdown && (
-                    <div className="pb-40 absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base overflow-auto focus:outline-none sm:text-sm">
-                      {isLoadingRegions ? (
-                        <div className="py-2 px-3 text-gray-500">
-                          {t.loadingRegions}
-                        </div>
-                      ) : Object.keys(getFilteredRegions()).length === 0 ? (
-                        <div 
-                          className="cursor-pointer select-none relative py-2 pl-3 pr-9 text-gray-900 hover:bg-indigo-50"
-                          onClick={addCustomRegion}
-                        >
-                          {t.customLocation.replace('{term}', regionSearchTerm)}
-                        </div>
-                      ) : (
-                        Object.entries(getFilteredRegions()).map(([region, cities]) => (
-                          <div key={region}>
-                            <div 
-                              className="cursor-pointer select-none relative py-2 pl-3 pr-9 font-medium text-gray-900 hover:bg-indigo-50"
-                              onClick={() => {
-                                addWorkRegion(region);
-                                setRegionSearchTerm('');
-                              }}
-                            >
-                              {region}
-                            </div>
-                            {cities.map((city, idx) => (
-                              <div 
-                                key={idx}
-                                className="cursor-pointer select-none relative py-2 pl-8 pr-9 text-gray-700 hover:bg-indigo-50"
-                                onClick={() => {
-                                  addWorkRegion(`${region} - ${city}`);
-                                  setRegionSearchTerm('');
-                                }}
-                              >
-                                {city}
-                              </div>
-                            ))}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
+                      ×
+                    </button>
+                  </span>
+                ))}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {t.regionsHelp}
+              
+              {/* חיפוש אזורי עבודה באמצעות Google Places */}
+              <div className="mt-2">
+                <GooglePlacesSearch
+                  language={language}
+                  onSelectLocation={handleWorkRegionSelect}
+                  placeholder={t.searchRegions || (language === 'he' ? 'חפש אזור עבודה...' : 'Search work region...')}
+                  initialValue=""
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {t.regionsHelp}
+                </p>
               </div>
             </div>
           </div>
         );
+      
       case 'roles':
         return (
           <div className="space-y-4">
