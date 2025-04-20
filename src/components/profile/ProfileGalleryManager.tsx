@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { uploadImage } from '../../services/storage';
 import { addImageToGallery, removeImageFromGallery } from '../../services/users';
+import { processProfileImage } from '../../utils/imageProcessing';
 
 interface ProfileGalleryManagerProps {
   userId: string;
@@ -101,9 +102,12 @@ export default function ProfileGalleryManager({ userId, galleryUrls, language, o
       setIsUploading(true);
       setError('');
       
+      // Process image before uploading
+      const processedFile = await processProfileImage(file);
+      
       // Upload image to storage
-      const path = `gallery/${userId}/${Date.now()}_${file.name}`;
-      const imageUrl = await uploadImage(file, path);
+      const path = `gallery/${userId}/${Date.now()}_${file.name.replace(/\.[^/.]+$/, '.png')}`;
+      const imageUrl = await uploadImage(processedFile, path);
       
       // Add image URL to user's gallery
       await addImageToGallery(userId, imageUrl);

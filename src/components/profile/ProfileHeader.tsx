@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { UserProfile } from '../../services/users';
 import { uploadImage } from '../../services/storage';
 import { updateUserProfile } from '../../services/users';
+import { processProfileImage } from '../../utils/imageProcessing';
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -66,19 +67,23 @@ export default function ProfileHeader({ profile, language, t, onEdit, onLogout, 
     
     try {
       setIsUploading(true);
-      // Upload new avatar image
-      const imageUrl = await uploadImage(file, `avatars/${profile.id}`);
       
-      // Update profile with new avatar
+      // עיבוד התמונה לפני העלאה
+      const processedFile = await processProfileImage(file);
+      
+      // העלאת התמונה המעובדת
+      const imageUrl = await uploadImage(processedFile, `avatars/${profile.id}`);
+      
+      // עדכון הפרופיל עם כתובת התמונה החדשה
       const updatedProfile = {
         ...profile,
         avatar: imageUrl
       };
       
-      // Update in database
+      // עדכון במסד הנתונים
       await updateUserProfile(updatedProfile);
       
-      // Update in parent component
+      // עדכון ברכיב האב
       onProfileUpdate(updatedProfile);
     } catch (err) {
       console.error('Error uploading avatar:', err);

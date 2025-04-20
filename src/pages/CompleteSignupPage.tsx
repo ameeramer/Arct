@@ -4,6 +4,7 @@ import { uploadImage } from '../services/storage';
 import { createUserProfile } from '../services/users';
 import { auth } from '../services/firebase';
 import GooglePlacesSearch from '../components/common/GooglePlacesSearch';
+import { processProfileImage } from '../utils/imageProcessing';
 
 const allRolesData = [
   // אדריכלות ועיצוב
@@ -173,138 +174,6 @@ const allRolesData = [
   'Smart Home Technology Specialist | מומחה טכנולוגיית בית חכם',
   'Virtual Reality Developer | מפתח מציאות מדומה',
   'Augmented Reality Developer | מפתח מציאות רבודה',
-
-  // מערכות ותשתיות
-  'Water Systems Consultant | יועץ מערכות מים',
-  'HVAC Consultant | יועץ מיזוג אוויר',
-  'Deck & Pergola Installer | מתקין דקים ופרגולות',
-  'Synthetic Grass Installer | מתקין דשא סינטטי',
-  'Smart Home Installer | מתקין מערכות חכמות',
-  'Solar Panel Installer | מתקין פאנלים סולאריים',
-  'Home Automation Specialist | מומחה אוטומציית ביתית',
-  'Security Systems Installer | מתקין מערכות אבטחה',
-  'Rainwater Harvesting Specialist | מומחה לאיסוף מי גשמים',
-  'Greywater Systems Designer | מתכנן מערכות מים אפורים',
-  'EV Charging Station Installer | מתקין עמדות טעינה לרכב חשמלי',
-  'Telecommunications Installer | מתקין תקשורת',
-  'Fiber Optic Specialist | מומחה סיבים אופטיים',
-  'Home Theater Installer | מתקין קולנוע ביתי',
-  'Backup Generator Installer | מתקין גנרטורים',
-  'Radiant Floor Heating Installer | מתקין חימום רצפתי',
-  'Pool & Spa Technician | טכנאי בריכות וספא',
-  'Outdoor Lighting Installer | מתקין תאורת חוץ',
-  'Intercom Systems Specialist | מומחה מערכות אינטרקום',
-
-  // תקשורת ומדיה
-  'Journalist | עיתונאי',
-  'Public Relations Specialist | מומחה יחסי ציבור',
-  'Marketing Specialist | מומחה שיווק',
-  'Content Creator | יוצר תוכן',
-  'Social Media Manager | מנהל מדיה חברתית',
-  'Copywriter | קופירייטר',
-  'Technical Writer | כותב טכני',
-  'Blogger | בלוגר',
-  'Podcaster | פודקאסטר',
-  'Videographer | צלם וידאו',
-  'Photographer | צלם',
-  'Graphic Designer | מעצב גרפי',
-  'Brand Strategist | אסטרטג מיתוג',
-  'Digital Marketing Specialist | מומחה שיווק דיגיטלי',
-  'SEO Specialist | מומחה קידום אתרים',
-  'Email Marketing Specialist | מומחה שיווק באימייל',
-  'Advertising Specialist | מומחה פרסום',
-  'Market Researcher | חוקר שוק',
-
-  // ניהול וליווי
-  'Project Manager | מנהל פרויקט',
-  'Ecological Consultant | יועץ אקולוגי',
-  'Environmental Artist | אומן סביבתי',
-  'Customer Experience Specialist | מומחה שירות לקוחות',
-  'Construction Cost Estimator | מעריך עלויות בנייה',
-  'Real Estate Developer | יזם נדל"ן',
-  'Building Inspector | מפקח בניינים',
-  'Facilities Manager | מנהל מתקנים',
-  'Sustainability Coordinator | רכז קיימות',
-  'Construction Scheduler | מתזמן בנייה',
-  'Quality Control Inspector | מפקח בקרת איכות',
-  'Procurement Specialist | מומחה רכש',
-  // אדריכלות ועיצוב
-  'Architect | אדריכל',
-  'Landscape Architect | אדריכל נוף',
-  'Interior Designer | מעצב פנים',
-  'Urban Planner | מתכנן ערים',
-  'Architectural Drafter | שרטט אדריכלי',
-  'Architectural Visualizer | מדמה אדריכלי',
-  'Parametric Designer | מעצב פרמטרי',
-  'BIM Manager | מנהל BIM',
-  'Architectural Model Maker | בונה מודלים אדריכליים',
-  'Sustainable Design Specialist | מומחה לתכנון בר-קיימא',
-  'Heritage Conservation Architect | אדריכל שימור מורשת',
-  'Facade Designer | מעצב חזיתות',
-  'Exhibition Designer | מעצב תערוכות',
-  'Retail Space Designer | מעצב חללי מסחר',
-  'Healthcare Facility Designer | מעצב מתקני בריאות',
-
-  // תכנון ונוף
-  'Gardener | גנן',
-  'Irrigation Designer | מתכנן השקיה',
-  'Agronomist | אגרונום',
-  'Arborist | מומחה עצים',
-  'Ornamental Gardener | גנן נוי',
-  'Landscape Designer | מעצב נוף',
-  'Permaculture Designer | מעצב פרמקלצ׳ר',
-  'Ecological Restoration Specialist | מומחה לשיקום אקולוגי',
-  'Botanical Garden Curator | אוצר גן בוטני',
-  'Urban Forester | יערן עירוני',
-  'Horticulturist | גנן מקצועי',
-  'Turf Management Specialist | מומחה לניהול דשא',
-  'Vertical Garden Designer | מעצב גינות אנכיות',
-  'Aquatic Plants Specialist | מומחה לצמחי מים',
-  'Xeriscaping Expert | מומחה לגינון חסכוני במים',
-  'Topiary Artist | אמן גיזום צמחים',
-
-  // בנייה ושיפוץ
-  'Renovation Contractor | קבלן שיפוצים',
-  'Structural Engineer | מהנדס בניין',
-  'Construction Supervisor | מפקח בניה',
-  'Tiler | רצף',
-  'Plasterer | טייח',
-  'Plumber | אינסטלטור',
-  'Electrician | חשמלאי',
-  'Carpenters | נגרים',
-  'Masonry Worker | בנאי',
-  'Roofer | גגן',
-  'Flooring Installer | מתקין רצפות',
-  'Drywall Installer | מתקין גבס',
-  'Painter | צבע',
-  'Insulation Installer | מתקין בידוד',
-  'Glazier | זגג',
-  'Demolition Specialist | מומחה הריסה',
-  'Concrete Finisher | גמר בטון',
-  'Scaffolding Specialist | מומחה פיגומים',
-  'Waterproofing Expert | מומחה איטום',
-  'Stucco Applicator | מיישם טיח חיצוני',
-  'Hardwood Floor Refinisher | משפץ רצפות עץ',
-  'Cabinet Maker | נגר ארונות',
-  'Countertop Installer | מתקין משטחי עבודה',
-  'Fence Installer | מתקין גדרות',
-
-  // מדידה וייעוץ
-  'Certified Surveyor | מודד מוסמך',
-  'Accessibility Consultant | יועץ נגישות',
-  'Property Appraiser | שמאי מקרקעין',
-  'Lighting Consultant | יועץ תאורה',
-  'Drainage & Soil Consultant | יועץ קרקע וניקוז',
-  'Acoustical Consultant | יועץ אקוסטיקה',
-  'Energy Efficiency Consultant | יועץ יעילות אנרגטית',
-  'Building Code Consultant | יועץ תקני בנייה',
-  'Fire Safety Consultant | יועץ בטיחות אש',
-  'Environmental Impact Assessor | מעריך השפעה סביבתית',
-  'Geotechnical Engineer | מהנדס גיאוטכני',
-  'Indoor Air Quality Specialist | מומחה לאיכות אוויר פנים',
-  'Thermal Imaging Specialist | מומחה הדמיה תרמית',
-  'Building Envelope Consultant | יועץ מעטפת בניין',
-  'Historic Preservation Consultant | יועץ שימור היסטורי',
 
   // מערכות ותשתיות
   'Water Systems Consultant | יועץ מערכות מים',
@@ -751,9 +620,23 @@ export default function CompleteSignupPage() {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null;
-    setFile(selectedFile);
+  // בתוך הפונקציה handleFileChange
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    try {
+      // עיבוד התמונה לפני הצגה
+      const processedFile = await processProfileImage(selectedFile);
+      setFile(processedFile);
+      
+      // יצירת URL לתצוגה מקדימה
+      const url = URL.createObjectURL(processedFile);
+      setPreviewUrl(url);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      // כאן אפשר להוסיף הודעת שגיאה למשתמש
+    }
   };
 
   const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1347,7 +1230,7 @@ export default function CompleteSignupPage() {
                       type="file"
                       className="sr-only"
                       accept="image/*"
-                      onChange={handleFileSelect}
+                      onChange={handleFileChange}
                     />
                   </label>
                 </div>

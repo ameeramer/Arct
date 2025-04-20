@@ -20,7 +20,7 @@ import CompleteSignupPage from './pages/CompleteSignupPage';
 // import MessagesPage from './pages/MessagesPage';
 // import ChatPage from './pages/ChatPage';
 import ProfileDashboardPage from './pages/ProfileDashboardPage';
-
+import SearchProfessionalsPage from './pages/SearchProfessionalsPage';
 // Create a wrapper component that uses useLocation
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
@@ -47,6 +47,20 @@ function AppContent() {
     }
   }, [user]);
 
+  useEffect(() => {
+    // טעינה דינמית של Google Maps API
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      // ניקוי בעת unmount
+      document.head.removeChild(script);
+    };
+  }, []);
+
   // Check if we should hide the navbar
   const hideNavbar = location.pathname === '/complete-signup';
 
@@ -65,6 +79,10 @@ function AppContent() {
         <Route
           path="/dashboard"
           element={user ? <ProfileDashboardPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/search-professionals"
+          element={user ? <SearchProfessionalsPage /> : <Navigate to="/login" />}
         />
       </Routes>
       

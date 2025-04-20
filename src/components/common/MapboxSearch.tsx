@@ -19,7 +19,7 @@ const MapboxSearch: React.FC<MapboxSearchProps> = ({
   placeholder,
   initialValue = ''
 }) => {
-  const [accessToken] = useState<string>('sk.eyJ1IjoiYW1pcmFtZXIiLCJhIjoiY205b2o0YmRjMHB2bDJyc2VsODR2NXlxdCJ9.nlCz0k6PLB9M6IleClJXyQ');
+  const [accessToken] = useState<string>('API_KEY');
   const [inputValue, setInputValue] = useState(initialValue);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
