@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../services/firebase';
 import { getAllUserProfiles, UserProfile } from '../services/users';
@@ -92,8 +92,6 @@ export default function AdminDashboardPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSection, setEditSection] = useState<string>('');
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navigate = useNavigate();
   
@@ -196,25 +194,6 @@ export default function AdminDashboardPage() {
   // Navigate to user profile
   const navigateToProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
-  };
-
-  // סגירת התפריט הנפתח בלחיצה מחוץ לתפריט
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setActiveDropdown(null);
-      }
-    }
-    
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // פונקציה לטיפול בפתיחה/סגירה של התפריט הנפתח
-  const toggleDropdown = (userId: string) => {
-    setActiveDropdown(activeDropdown === userId ? null : userId);
   };
 
   if (isLoading) {
@@ -375,61 +354,7 @@ export default function AdminDashboardPage() {
                         {user.yearsOfExperience} {t.years}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {/* תצוגת מובייל - תפריט נפתח */}
-                        <div className="sm:hidden relative" ref={dropdownRef}>
-                          <button
-                            onClick={() => toggleDropdown(user.id)}
-                            className="px-3 py-1 bg-indigo-600 text-white rounded-md"
-                          >
-                            {t.actions}
-                          </button>
-                          
-                          {activeDropdown === user.id && (
-                            <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                              <div className="py-1">
-                                <button
-                                  onClick={() => {
-                                    openEditModal(user, 'personal');
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  {t.edit}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    openEditModal(user, 'roles');
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  {t.editRoles}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    openEditModal(user, 'regions');
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  {t.editRegions}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    navigateToProfile(user.id);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="block w-full text-right px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  {t.view}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* תצוגת דסקטופ - כפתורים */}
-                        <div className="hidden sm:flex space-x-2">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => openEditModal(user, 'personal')}
                             className="text-indigo-600 hover:text-indigo-900"
