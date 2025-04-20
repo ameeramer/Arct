@@ -21,6 +21,7 @@ import CompleteSignupPage from './pages/CompleteSignupPage';
 // import ChatPage from './pages/ChatPage';
 import ProfileDashboardPage from './pages/ProfileDashboardPage';
 import SearchProfessionalsPage from './pages/SearchProfessionalsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 // Create a wrapper component that uses useLocation
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
@@ -83,6 +84,10 @@ function AppContent() {
         <Route
           path="/search-professionals"
           element={user ? <SearchProfessionalsPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin"
+          element={user ? <AdminDashboardPage /> : <Navigate to="/login" />}
         />
       </Routes>
       

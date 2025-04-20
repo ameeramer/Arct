@@ -1,4 +1,4 @@
-import { arrayUnion, arrayRemove, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { arrayUnion, arrayRemove, doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { deleteImage } from './storage';
 
@@ -104,3 +104,27 @@ export async function removeImageFromGallery(userId: string, imageUrl: string): 
     // Continue even if storage deletion fails
   }
 }
+
+/**
+ * מחזיר את כל פרופילי המשתמשים במערכת
+ * @returns הבטחה שמחזירה מערך של פרופילי משתמשים
+ */
+export const getAllUserProfiles = async (): Promise<UserProfile[]> => {
+  try {
+    const usersCollection = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersCollection);
+    
+    const userProfiles: UserProfile[] = [];
+    usersSnapshot.forEach((doc) => {
+      userProfiles.push({
+        id: doc.id,
+        ...doc.data()
+      } as UserProfile);
+    });
+    
+    return userProfiles;
+  } catch (error) {
+    console.error('Error fetching all user profiles:', error);
+    throw error;
+  }
+};
