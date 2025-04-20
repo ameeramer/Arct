@@ -4,6 +4,7 @@ import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import GooglePlacesSearch from '../components/common/GooglePlacesSearch';
 import { allRoles } from './CompleteSignupPage';
+import { geocodeRegion, isRegionContainedIn } from '../utils/regionUtils';
 
 // Translation data
 const translations = {
@@ -87,6 +88,7 @@ export default function SearchProfessionalsPage() {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [isFilteringRegions, setIsFilteringRegions] = useState(false);
   
   // Get translations based on selected language
   const t = translations[language];
@@ -141,25 +143,78 @@ export default function SearchProfessionalsPage() {
 
   // Apply filters when selected roles or regions change
   useEffect(() => {
-    let filtered = [...professionals];
-    
-    // Filter by selected roles
-    if (selectedRoles.length > 0) {
-      filtered = filtered.filter(professional => 
-        professional.roles.some(role => selectedRoles.includes(role))
-      );
-    }
-    
-    // Filter by selected regions
-    if (selectedRegions.length > 0) {
-      filtered = filtered.filter(professional => 
-        professional.workRegions.some(region => 
-          selectedRegions.some(selectedRegion => selectedRegion.name === region.name)
-        )
-      );
-    }
-    
-    setFilteredProfessionals(filtered);
+    const applyFilters = async () => {
+      setIsFilteringRegions(true);
+      let filtered = [...professionals];
+      
+      // Filter by selected roles
+      if (selectedRoles.length > 0) {
+        filtered = filtered.filter(professional => 
+          professional.roles.some(role => selectedRoles.includes(role))
+        );
+      }
+      
+      // Filter by selected regions with containment check
+      if (selectedRegions.length > 0) {
+        // Pre-geocode all selected regions to populate cache
+        await Promise.all(selectedRegions.map(region => geocodeRegion(region)));
+        
+        // Create a map of region containment relationships
+        const containmentMap = new Map<string, Set<string>>();
+        
+        // For each pair of selected regions, check containment
+        for (const regionA of selectedRegions) {
+          const keyA = regionA.place_id || regionA.name;
+          if (!containmentMap.has(keyA)) {
+            containmentMap.set(keyA, new Set<string>());
+          }
+          
+          for (const regionB of selectedRegions) {
+            const keyB = regionB.place_id || regionB.name;
+            if (keyA !== keyB && await isRegionContainedIn(regionA, regionB)) {
+              containmentMap.get(keyA)?.add(keyB);
+            }
+          }
+        }
+        
+        // Filter professionals based on region containment
+        filtered = await Promise.all(filtered.map(async (professional) => {
+          // If professional has no work regions, exclude them
+          if (!professional.workRegions.length) return null;
+          
+          // Check each of the professional's work regions
+          for (const profRegion of professional.workRegions) {
+            const profRegionKey = profRegion.place_id || profRegion.name;
+            
+            // Direct match with a selected region
+            if (selectedRegions.some(r => (r.place_id || r.name) === profRegionKey)) {
+              return professional;
+            }
+            
+            // Check containment relationships
+            for (const selectedRegion of selectedRegions) {
+              
+              // Check if professional's region contains the selected region
+              if (await isRegionContainedIn(selectedRegion, profRegion)) {
+                return professional;
+              }
+              
+              // Check if selected region contains professional's region
+              if (await isRegionContainedIn(profRegion, selectedRegion)) {
+                return professional;
+              }
+            }
+          }
+          
+          return null;
+        })).then(results => results.filter(Boolean) as Professional[]);
+      }
+      
+      setFilteredProfessionals(filtered);
+      setIsFilteringRegions(false);
+    };
+
+    applyFilters();
   }, [selectedRoles, selectedRegions, professionals]);
 
   // Handle click outside role dropdown
@@ -400,7 +455,7 @@ export default function SearchProfessionalsPage() {
           {t.searchResults} ({filteredProfessionals.length})
         </h2>
 
-        {loading ? (
+        {loading || isFilteringRegions ? (
           <div className="flex justify-center items-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
           </div>
