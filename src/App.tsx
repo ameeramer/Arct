@@ -22,6 +22,8 @@ import CompleteSignupPage from './pages/CompleteSignupPage';
 import ProfileDashboardPage from './pages/ProfileDashboardPage';
 import SearchProfessionalsPage from './pages/SearchProfessionalsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import DesignGeneratorPage from './pages/DesignGeneratorPage';
+import ImagePlaygroundPage from './pages/ImagePlaygroundPage';
 // Create a wrapper component that uses useLocation
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
@@ -89,6 +91,11 @@ function AppContent() {
           path="/admin"
           element={user ? <AdminDashboardPage /> : <Navigate to="/login" />}
         />
+        <Route
+          path="/design-generator"
+          element={user ? <DesignGeneratorPage /> : <Navigate to="/login" />}
+        />
+        <Route path="/image-playground" element={<ImagePlaygroundPage />} />
       </Routes>
       
       {/* Only show navbar if not on complete-signup page */}
