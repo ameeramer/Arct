@@ -41,96 +41,164 @@ interface StyleTransferParams {
  * @returns הבטחה שמחזירה את קובץ התמונה בגודל המתאים
  */
 export async function resizeImageForStability(file: File): Promise<File> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    
-    img.onload = () => {
-      // שחרור ה-URL שיצרנו
-      URL.revokeObjectURL(url);
+  // בדיקה אם הקובץ כבר קטן מ-9MB (משאירים מרווח לפרמטרים אחרים בבקשה)
+  if (file.size < 9 * 1024 * 1024) {
+    // בדיקה נוספת של מימדי התמונה
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
       
-      const { width, height } = img;
-      const totalPixels = width * height;
-      
-      // בדיקה אם התמונה כבר בגודל מתאים
-      if (totalPixels <= 9437184 && width >= 64 && height >= 64) {
-        // בדיקת יחס גובה-רוחב (חייב להיות בין 1:2.5 ל-2.5:1)
-        const aspectRatio = width / height;
-        if (aspectRatio >= 0.4 && aspectRatio <= 2.5) {
-          resolve(file);
-          return;
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        
+        const { width, height } = img;
+        const totalPixels = width * height;
+        
+        // בדיקה אם התמונה כבר בגודל מתאים
+        if (totalPixels <= 9437184 && width >= 64 && height >= 64) {
+          // בדיקת יחס גובה-רוחב (חייב להיות בין 1:2.5 ל-2.5:1)
+          const aspectRatio = width / height;
+          if (aspectRatio >= 0.4 && aspectRatio <= 2.5) {
+            resolve(file);
+            return;
+          }
         }
-      }
+        
+        // המשך לשינוי גודל...
+        compressAndResizeImage(img, file, resolve, reject);
+      };
       
-      // חישוב הגודל החדש
-      let newWidth = width;
-      let newHeight = height;
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
       
-      // טיפול בתמונות גדולות מדי
-      if (totalPixels > 9437184) {
-        const scale = Math.sqrt(9437184 / totalPixels);
-        newWidth = Math.floor(width * scale);
-        newHeight = Math.floor(height * scale);
-      }
+      img.src = url;
+    });
+  } else {
+    // הקובץ גדול מדי, חייבים לדחוס אותו
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
       
-      // טיפול ביחס גובה-רוחב
-      const aspectRatio = newWidth / newHeight;
-      if (aspectRatio < 0.4) {
-        // תמונה צרה מדי
-        newWidth = Math.ceil(newHeight * 0.4);
-      } else if (aspectRatio > 2.5) {
-        // תמונה רחבה מדי
-        newHeight = Math.ceil(newWidth / 2.5);
-      }
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        compressAndResizeImage(img, file, resolve, reject, true);
+      };
       
-      // וידוא שהתמונה לא קטנה מדי
-      if (newWidth < 64) {
-        newWidth = 64;
-        newHeight = Math.min(Math.ceil(newWidth / 0.4), 160); // שמירה על יחס גובה-רוחב מקסימלי
-      }
-      if (newHeight < 64) {
-        newHeight = 64;
-        newWidth = Math.min(Math.ceil(newHeight * 2.5), 160); // שמירה על יחס גובה-רוחב מקסימלי
-      }
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
       
-      // יצירת קנבס לשינוי גודל התמונה
-      const canvas = document.createElement('canvas');
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
+      img.src = url;
+    });
+  }
+}
+
+/**
+ * פונקציית עזר לדחיסה ושינוי גודל של תמונה
+ */
+function compressAndResizeImage(
+  img: HTMLImageElement, 
+  file: File, 
+  resolve: (file: File) => void, 
+  reject: (error: Error) => void,
+  forceCompress: boolean = false
+) {
+  const { width, height } = img;
+  const totalPixels = width * height;
+  
+  // חישוב הגודל החדש
+  let newWidth = width;
+  let newHeight = height;
+  
+  // טיפול בתמונות גדולות מדי
+  if (totalPixels > 9437184 || forceCompress) {
+    // אם צריך דחיסה חזקה, נקטין יותר
+    const targetPixels = forceCompress ? 4000000 : 9000000;
+    const scale = Math.sqrt(targetPixels / totalPixels);
+    newWidth = Math.floor(width * scale);
+    newHeight = Math.floor(height * scale);
+  }
+  
+  // טיפול ביחס גובה-רוחב
+  const aspectRatio = newWidth / newHeight;
+  if (aspectRatio < 0.4) {
+    // תמונה צרה מדי
+    newWidth = Math.ceil(newHeight * 0.4);
+  } else if (aspectRatio > 2.5) {
+    // תמונה רחבה מדי
+    newHeight = Math.ceil(newWidth / 2.5);
+  }
+  
+  // וידוא שהתמונה לא קטנה מדי
+  if (newWidth < 64) {
+    newWidth = 64;
+    newHeight = Math.min(Math.ceil(newWidth / 0.4), 160);
+  }
+  if (newHeight < 64) {
+    newHeight = 64;
+    newWidth = Math.min(Math.ceil(newHeight * 2.5), 160);
+  }
+  
+  // יצירת קנבס לשינוי גודל התמונה
+  const canvas = document.createElement('canvas');
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    reject(new Error('Failed to get canvas context'));
+    return;
+  }
+  
+  // ציור התמונה בגודל החדש
+  ctx.drawImage(img, 0, 0, newWidth, newHeight);
+  
+  // המרת הקנבס לקובץ עם דחיסה
+  const quality = forceCompress ? 0.7 : 0.9; // דחיסה חזקה יותר אם הקובץ גדול מאוד
+  
+  canvas.toBlob(
+    (blob) => {
+      if (!blob) {
+        reject(new Error('Failed to create blob from canvas'));
         return;
       }
       
-      // ציור התמונה בגודל החדש
-      ctx.drawImage(img, 0, 0, newWidth, newHeight);
-      
-      // המרת הקנבס לקובץ
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error('Failed to create blob from canvas'));
-          return;
-        }
-        
-        // יצירת קובץ חדש עם אותו שם וסוג
+      // בדיקה אם הקובץ עדיין גדול מדי
+      if (blob.size > 9 * 1024 * 1024) {
+        // ניסיון נוסף עם דחיסה חזקה יותר
+        canvas.toBlob(
+          (compressedBlob) => {
+            if (!compressedBlob) {
+              reject(new Error('Failed to compress image'));
+              return;
+            }
+            
+            const newFile = new File([compressedBlob], file.name, { 
+              type: 'image/jpeg', 
+              lastModified: file.lastModified 
+            });
+            
+            resolve(newFile);
+          },
+          'image/jpeg',
+          0.5  // דחיסה חזקה מאוד
+        );
+      } else {
+        // הקובץ בגודל מתאים
         const newFile = new File([blob], file.name, { 
-          type: 'image/png', // תמיד נשתמש ב-PNG לאיכות מיטבית
+          type: forceCompress ? 'image/jpeg' : 'image/png', 
           lastModified: file.lastModified 
         });
         
         resolve(newFile);
-      }, 'image/png');
-    };
-    
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
-    
-    img.src = url;
-  });
+      }
+    },
+    forceCompress ? 'image/jpeg' : 'image/png',
+    quality
+  );
 }
 
 /**
