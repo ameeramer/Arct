@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { generateControlledImage, generateStyledImage, processAndSaveGeneratedImage } from '../services/stability';
+import { generateControlledImage, processAndSaveGeneratedImage } from '../services/stability';
 
 type ImageGeneratorProps = {
   projectId: string;
