@@ -36,6 +36,104 @@ interface StyleTransferParams {
 }
 
 /**
+ * מבצע שינוי גודל לתמונה כדי לעמוד בדרישות ה-API של Stability
+ * @param file קובץ התמונה המקורי
+ * @returns הבטחה שמחזירה את קובץ התמונה בגודל המתאים
+ */
+export async function resizeImageForStability(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      // שחרור ה-URL שיצרנו
+      URL.revokeObjectURL(url);
+      
+      const { width, height } = img;
+      const totalPixels = width * height;
+      
+      // בדיקה אם התמונה כבר בגודל מתאים
+      if (totalPixels <= 9437184 && width >= 64 && height >= 64) {
+        // בדיקת יחס גובה-רוחב (חייב להיות בין 1:2.5 ל-2.5:1)
+        const aspectRatio = width / height;
+        if (aspectRatio >= 0.4 && aspectRatio <= 2.5) {
+          resolve(file);
+          return;
+        }
+      }
+      
+      // חישוב הגודל החדש
+      let newWidth = width;
+      let newHeight = height;
+      
+      // טיפול בתמונות גדולות מדי
+      if (totalPixels > 9437184) {
+        const scale = Math.sqrt(9437184 / totalPixels);
+        newWidth = Math.floor(width * scale);
+        newHeight = Math.floor(height * scale);
+      }
+      
+      // טיפול ביחס גובה-רוחב
+      const aspectRatio = newWidth / newHeight;
+      if (aspectRatio < 0.4) {
+        // תמונה צרה מדי
+        newWidth = Math.ceil(newHeight * 0.4);
+      } else if (aspectRatio > 2.5) {
+        // תמונה רחבה מדי
+        newHeight = Math.ceil(newWidth / 2.5);
+      }
+      
+      // וידוא שהתמונה לא קטנה מדי
+      if (newWidth < 64) {
+        newWidth = 64;
+        newHeight = Math.min(Math.ceil(newWidth / 0.4), 160); // שמירה על יחס גובה-רוחב מקסימלי
+      }
+      if (newHeight < 64) {
+        newHeight = 64;
+        newWidth = Math.min(Math.ceil(newHeight * 2.5), 160); // שמירה על יחס גובה-רוחב מקסימלי
+      }
+      
+      // יצירת קנבס לשינוי גודל התמונה
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      
+      // ציור התמונה בגודל החדש
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      // המרת הקנבס לקובץ
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Failed to create blob from canvas'));
+          return;
+        }
+        
+        // יצירת קובץ חדש עם אותו שם וסוג
+        const newFile = new File([blob], file.name, { 
+          type: 'image/png', // תמיד נשתמש ב-PNG לאיכות מיטבית
+          lastModified: file.lastModified 
+        });
+        
+        resolve(newFile);
+      }, 'image/png');
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = url;
+  });
+}
+
+/**
  * מבצע בקשה ל-Stability AI API עם בקרת סקיצה או מבנה
  * @param controlType סוג הבקרה (sketch או structure)
  * @param imageFile קובץ התמונה המקורי
@@ -52,9 +150,12 @@ export async function generateControlledImage(
     throw new Error('Prompt is required');
   }
 
+  // שינוי גודל התמונה אם צריך
+  const resizedImage = await resizeImageForStability(imageFile);
+
   // יצירת FormData לבקשה
   const formData = new FormData();
-  formData.append('image', imageFile);
+  formData.append('image', resizedImage);
   formData.append('prompt', params.prompt);
 
   // הוספת פרמטרים אופציונליים
@@ -120,9 +221,12 @@ export async function generateStyledImage(
     throw new Error('Prompt is required');
   }
 
+  // שינוי גודל התמונה אם צריך
+  const resizedImage = await resizeImageForStability(imageFile);
+
   // יצירת FormData לבקשה
   const formData = new FormData();
-  formData.append('image', imageFile);
+  formData.append('image', resizedImage);
   formData.append('prompt', params.prompt);
 
   // הוספת פרמטרים אופציונליים
@@ -188,10 +292,14 @@ export async function generateStyleTransferImage(
   styleImageFile: File,
   params: StyleTransferParams = {}
 ): Promise<Blob> {
+  // שינוי גודל התמונות אם צריך
+  const resizedInitImage = await resizeImageForStability(initImageFile);
+  const resizedStyleImage = await resizeImageForStability(styleImageFile);
+
   // יצירת FormData לבקשה
   const formData = new FormData();
-  formData.append('init_image', initImageFile);
-  formData.append('style_image', styleImageFile);
+  formData.append('init_image', resizedInitImage);
+  formData.append('style_image', resizedStyleImage);
 
   // הוספת פרמטרים אופציונליים
   if (params.prompt) {
