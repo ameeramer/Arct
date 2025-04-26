@@ -1,19 +1,27 @@
 import { useState } from 'react';
-import { generateControlledImage, generateStyledImage } from '../services/stability';
+import { generateImage, editImage } from '../services/openai';
 import { uploadImage } from '../services/storage';
 
 export default function ImagePlaygroundPage() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [uploadedMask, setUploadedMask] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [maskPreviewUrl, setMaskPreviewUrl] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [negativePrompt, setNegativePrompt] = useState('');
-  const [controlType, setControlType] = useState<'sketch' | 'structure' | 'style'>('structure');
+  const [imageAction, setImageAction] = useState<'generate' | 'edit'>('generate');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generationHistory, setGenerationHistory] = useState<Array<{url: string, prompt: string}>>([]);
+  
+  // הגדרות מתקדמות
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [imageSize, setImageSize] = useState<'1024x1024' | '1536x1024' | '1024x1536' | 'auto'>('1024x1024');
+  const [imageQuality, setImageQuality] = useState<'low' | 'medium' | 'high' | 'auto'>('auto');
+  const [imageFormat, setImageFormat] = useState<'png' | 'jpeg' | 'webp'>('png');
+  const [transparentBackground, setTransparentBackground] = useState(false);
 
-  // טיפול בהעלאת קובץ
+  // טיפול בהעלאת קובץ תמונה
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -29,10 +37,26 @@ export default function ImagePlaygroundPage() {
     setError(null);
   };
 
-  // יצירת תמונה חדשה באמצעות Stability AI
+  // טיפול בהעלאת קובץ מסכה
+  const handleMaskFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // בדיקת סוג הקובץ
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file for the mask');
+      return;
+    }
+
+    setUploadedMask(file);
+    setMaskPreviewUrl(URL.createObjectURL(file));
+    setError(null);
+  };
+
+  // יצירת תמונה חדשה באמצעות OpenAI
   const handleGenerate = async () => {
-    if (!uploadedImage) {
-      setError('Please upload an image first');
+    if (imageAction === 'edit' && !uploadedImage) {
+      setError('Please upload an image to edit');
       return;
     }
 
@@ -48,42 +72,45 @@ export default function ImagePlaygroundPage() {
       // יצירת תמונה באמצעות API
       let imageBlob;
       
-      if (controlType === 'style') {
-        imageBlob = await generateStyledImage(
-          uploadedImage,
-          {
-            prompt,
-            negative_prompt: negativePrompt || undefined,
-            output_format: 'png',
-          }
-        );
+      if (imageAction === 'generate') {
+        // יצירת תמונה חדשה
+        imageBlob = await generateImage(prompt, {
+          size: imageSize,
+          quality: imageQuality,
+          format: imageFormat,
+          background: transparentBackground ? 'transparent' : 'opaque',
+        });
       } else {
-        imageBlob = await generateControlledImage(
-          controlType,
+        // עריכת תמונה קיימת
+        if (!uploadedImage) {
+          throw new Error('No image to edit');
+        }
+        
+        imageBlob = await editImage(
           uploadedImage,
+          prompt,
           {
-            prompt,
-            negative_prompt: negativePrompt || undefined,
-            output_format: 'png',
-          }
+            size: imageSize,
+            quality: imageQuality,
+            format: imageFormat,
+            background: transparentBackground ? 'transparent' : 'opaque',
+          },
+          uploadedMask || undefined
         );
       }
 
       // יצירת קובץ מה-Blob
-      const filename = `playground-${Date.now()}.png`;
-      const file = new File([imageBlob], filename, { type: 'image/png' });
+      const filename = `playground-${Date.now()}.${imageFormat}`;
+      
+      // יצירת URL זמני לתצוגה
+      const url = URL.createObjectURL(imageBlob);
+      setGeneratedImageUrl(url);
       
       // העלאת התמונה לאחסון
-      const imageUrl = await uploadImage(file, filename);
-      
-      // עדכון התמונה שנוצרה
-      setGeneratedImageUrl(imageUrl);
+      const storageUrl = await uploadImage(new File([imageBlob], filename, { type: `image/${imageFormat}` }), filename);
       
       // הוספה להיסטוריה
-      setGenerationHistory(prev => [
-        { url: imageUrl, prompt }, 
-        ...prev.slice(0, 9)  // שמירת 10 תמונות אחרונות בלבד
-      ]);
+      setGenerationHistory(prev => [...prev, { url: storageUrl, prompt }]);
       
     } catch (err) {
       console.error('Error generating image:', err);
@@ -93,128 +120,37 @@ export default function ImagePlaygroundPage() {
     }
   };
 
-  // ניקוי התמונה שהועלתה
-  const clearUploadedImage = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setUploadedImage(null);
-    setPreviewUrl(null);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Image Playground</h1>
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-center mb-8">AI Image Playground</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* טופס יצירת תמונה */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Create New Design</h2>
-            
-            {/* תיבת העלאת תמונה */}
-            <div 
-              className={`border-2 border-dashed rounded-lg p-4 mb-4 text-center cursor-pointer ${
-                previewUrl ? 'border-indigo-300 bg-indigo-50' : 'border-gray-300 hover:border-indigo-500'
-              }`}
-              onClick={() => document.getElementById('file-upload')?.click()}
-            >
-              {previewUrl ? (
-                <div className="relative">
-                  <img 
-                    src={previewUrl} 
-                    alt="Preview" 
-                    className="max-h-64 mx-auto rounded"
-                  />
-                  <button 
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      clearUploadedImage();
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ) : (
-                <div className="py-4">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Drag and drop an image, or click to select
-                  </p>
-                </div>
-              )}
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-            </div>
-
-            {/* בחירת סוג בקרה */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Control Type
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <label className={`flex items-center justify-center p-2 rounded ${
-                  controlType === 'structure' ? 'bg-indigo-100 border border-indigo-300' : 'bg-gray-100 border border-gray-200'
-                }`}>
-                  <input
-                    type="radio"
-                    value="structure"
-                    checked={controlType === 'structure'}
-                    onChange={() => setControlType('structure')}
-                    className="sr-only"
-                  />
-                  <span>Structure</span>
-                </label>
-                <label className={`flex items-center justify-center p-2 rounded ${
-                  controlType === 'sketch' ? 'bg-indigo-100 border border-indigo-300' : 'bg-gray-100 border border-gray-200'
-                }`}>
-                  <input
-                    type="radio"
-                    value="sketch"
-                    checked={controlType === 'sketch'}
-                    onChange={() => setControlType('sketch')}
-                    className="sr-only"
-                  />
-                  <span>Sketch</span>
-                </label>
-                <label className={`flex items-center justify-center p-2 rounded ${
-                  controlType === 'style' ? 'bg-indigo-100 border border-indigo-300' : 'bg-gray-100 border border-gray-200'
-                }`}>
-                  <input
-                    type="radio"
-                    value="style"
-                    checked={controlType === 'style'}
-                    onChange={() => setControlType('style')}
-                    className="sr-only"
-                  />
-                  <span>Style</span>
-                </label>
+            <div className="mb-6">
+              <div className="flex border border-gray-300 rounded-md overflow-hidden">
+                <button
+                  onClick={() => setImageAction('generate')}
+                  className={`flex-1 py-2 px-4 ${
+                    imageAction === 'generate'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  Generate
+                </button>
+                <button
+                  onClick={() => setImageAction('edit')}
+                  className={`flex-1 py-2 px-4 ${
+                    imageAction === 'edit'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  Edit
+                </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                {controlType === 'structure' && 'Maintains the structure of your image while changing its appearance.'}
-                {controlType === 'sketch' && 'Enhances sketches or uses contour lines to guide the generation.'}
-                {controlType === 'style' && 'Extracts stylistic elements from your image to guide the creation.'}
-              </p>
             </div>
 
             {/* תיבת טקסט לתיאור */}
@@ -225,24 +161,226 @@ export default function ImagePlaygroundPage() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe what you want to see in the image..."
+                placeholder="Describe the image you want to create..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                rows={3}
+                rows={4}
               />
             </div>
 
-            {/* תיבת טקסט לתיאור שלילי */}
+            {/* העלאת תמונה (רק במצב עריכה) */}
+            {imageAction === 'edit' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Image to Edit
+                </label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    {previewUrl ? (
+                      <div>
+                        <img
+                          src={previewUrl}
+                          alt="Preview"
+                          className="mx-auto h-32 w-auto"
+                        />
+                        <button
+                          onClick={() => {
+                            setUploadedImage(null);
+                            setPreviewUrl(null);
+                          }}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          stroke="currentColor"
+                          fill="none"
+                          viewBox="0 0 48 48"
+                        >
+                          <path
+                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className="flex text-sm text-gray-600">
+                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                            <span>Upload a file</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              className="sr-only"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 25MB</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* העלאת מסכה (אופציונלי במצב עריכה) */}
+            {imageAction === 'edit' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Mask (Optional)
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  The transparent areas of the mask will be replaced, while the filled areas will be left unchanged.
+                </p>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    {maskPreviewUrl ? (
+                      <div>
+                        <img
+                          src={maskPreviewUrl}
+                          alt="Mask Preview"
+                          className="mx-auto h-32 w-auto"
+                        />
+                        <button
+                          onClick={() => {
+                            setUploadedMask(null);
+                            setMaskPreviewUrl(null);
+                          }}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          stroke="currentColor"
+                          fill="none"
+                          viewBox="0 0 48 48"
+                        >
+                          <path
+                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className="flex text-sm text-gray-600">
+                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
+                            <span>Upload a mask</span>
+                            <input
+                              id="mask-upload"
+                              name="mask-upload"
+                              type="file"
+                              className="sr-only"
+                              accept="image/*"
+                              onChange={handleMaskFileChange}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG with transparency</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* הגדרות מתקדמות */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Negative Prompt (Optional)
-              </label>
-              <textarea
-                value={negativePrompt}
-                onChange={(e) => setNegativePrompt(e.target.value)}
-                placeholder="Describe what you don't want to see..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                rows={2}
-              />
+              <button
+                type="button"
+                onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center"
+              >
+                {showAdvancedSettings ? 'Hide' : 'Show'} Advanced Settings
+                <svg
+                  className={`ml-1 h-4 w-4 transform ${showAdvancedSettings ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {showAdvancedSettings && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Size
+                      </label>
+                      <select
+                        value={imageSize}
+                        onChange={(e) => setImageSize(e.target.value as any)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="1024x1024">Square (1024x1024)</option>
+                        <option value="1536x1024">Landscape (1536x1024)</option>
+                        <option value="1024x1536">Portrait (1024x1536)</option>
+                        <option value="auto">Auto</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Quality
+                      </label>
+                      <select
+                        value={imageQuality}
+                        onChange={(e) => setImageQuality(e.target.value as any)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="low">Low (Faster)</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High (Best Quality)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Format
+                      </label>
+                      <select
+                        value={imageFormat}
+                        onChange={(e) => setImageFormat(e.target.value as any)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="png">PNG</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="webp">WebP</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        id="transparent-bg"
+                        type="checkbox"
+                        checked={transparentBackground}
+                        onChange={(e) => setTransparentBackground(e.target.checked)}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        disabled={imageFormat === 'jpeg'}
+                      />
+                      <label htmlFor="transparent-bg" className="ml-2 block text-sm text-gray-700">
+                        Transparent Background
+                        {imageFormat === 'jpeg' && (
+                          <span className="text-xs text-red-500 ml-1">(Not available with JPEG)</span>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* הודעת שגיאה */}
@@ -255,26 +393,26 @@ export default function ImagePlaygroundPage() {
             {/* כפתור יצירה */}
             <button
               onClick={handleGenerate}
-              disabled={isGenerating || !uploadedImage || !prompt.trim()}
+              disabled={isGenerating || (imageAction === 'edit' && !uploadedImage) || !prompt.trim()}
               className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                isGenerating || !uploadedImage || !prompt.trim()
+                isGenerating || (imageAction === 'edit' && !uploadedImage) || !prompt.trim()
                   ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
             >
-              {isGenerating ? 'Generating...' : 'Generate Design'}
+              {isGenerating ? 'Generating...' : imageAction === 'generate' ? 'Generate Image' : 'Edit Image'}
             </button>
           </div>
 
           {/* תצוגת התמונה שנוצרה */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">Generated Design</h2>
+            <h2 className="text-xl font-semibold mb-4">Generated Image</h2>
             
             {generatedImageUrl ? (
               <div className="text-center">
                 <img 
                   src={generatedImageUrl} 
-                  alt="Generated design" 
+                  alt="Generated image" 
                   className="max-h-96 mx-auto rounded-lg shadow-md"
                 />
                 <p className="mt-4 text-sm text-gray-600 italic">"{prompt}"</p>
@@ -290,8 +428,12 @@ export default function ImagePlaygroundPage() {
                   </a>
                   <button 
                     onClick={() => {
-                      setUploadedImage(null);
-                      setPreviewUrl(null);
+                      if (imageAction === 'edit') {
+                        setUploadedImage(null);
+                        setPreviewUrl(null);
+                        setUploadedMask(null);
+                        setMaskPreviewUrl(null);
+                      }
                       setGeneratedImageUrl(null);
                     }}
                     className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
@@ -305,7 +447,7 @@ export default function ImagePlaygroundPage() {
                 <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="mt-2">Your generated design will appear here</p>
+                <p className="mt-2">Your generated image will appear here</p>
               </div>
             )}
           </div>
@@ -320,7 +462,7 @@ export default function ImagePlaygroundPage() {
                 <div key={index} className="relative group">
                   <img 
                     src={item.url} 
-                    alt={`Generated design ${index + 1}`} 
+                    alt={`Generated image ${index + 1}`} 
                     className="w-full h-40 object-cover rounded-lg"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
@@ -346,32 +488,25 @@ export default function ImagePlaygroundPage() {
         {/* מידע על השירות */}
         <div className="mt-8 bg-white rounded-xl p-6 shadow-sm">
           <h2 className="text-xl font-semibold mb-4">About This Tool</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-lg mb-2">Structure</h3>
+              <h3 className="font-medium text-lg mb-2">Generate Images</h3>
               <p className="text-gray-600 text-sm">
-                This mode maintains the structure of your input image while changing its appearance. 
-                Perfect for transforming real photos into different styles while keeping the layout intact.
+                Create brand new images from text descriptions. The more detailed your prompt, the better the results.
+                Try to be specific about style, colors, lighting, and composition.
               </p>
             </div>
             <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-lg mb-2">Sketch</h3>
+              <h3 className="font-medium text-lg mb-2">Edit Images</h3>
               <p className="text-gray-600 text-sm">
-                This mode upgrades sketches to refined outputs with precise control. 
-                For non-sketch images, it uses contour lines and edges to guide the generation.
-              </p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="font-medium text-lg mb-2">Style</h3>
-              <p className="text-gray-600 text-sm">
-                This mode extracts stylistic elements from your input image and uses them to guide the creation
-                of a new image based on your prompt.
+                Transform existing images using text prompts. You can also use a mask to specify which parts of the image
+                should be edited while leaving the rest unchanged.
               </p>
             </div>
           </div>
           <div className="mt-4 text-sm text-gray-500">
-            <p>Powered by Stability AI. Images are generated using advanced AI models.</p>
-            <p className="mt-1">Tip: For best results, use clear images and detailed prompts.</p>
+            <p>Powered by OpenAI's GPT Image model. Images are generated using advanced AI technology.</p>
+            <p className="mt-1">Tip: For best results with image editing, use clear images and detailed prompts that describe what you want to change.</p>
           </div>
         </div>
       </div>
