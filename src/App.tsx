@@ -24,6 +24,8 @@ import SearchProfessionalsPage from './pages/SearchProfessionalsPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import DesignGeneratorPage from './pages/DesignGeneratorPage';
 import ImagePlaygroundPage from './pages/ImagePlaygroundPage';
+import AIChatPage from './pages/AIChatPage';
+
 // Create a wrapper component that uses useLocation
 function AppContent() {
   const [user, setUser] = useState<User | null>(null);
@@ -96,6 +98,7 @@ function AppContent() {
           element={user ? <DesignGeneratorPage /> : <Navigate to="/login" />}
         />
         <Route path="/image-playground" element={<ImagePlaygroundPage />} />
+        <Route path="/ai-chat" element={user ? <AIChatPage /> : <Navigate to="/login" />} />
       </Routes>
       
       {/* Only show navbar if not on complete-signup page */}
