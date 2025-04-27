@@ -5,7 +5,6 @@ import {
   ChatContent, 
   processWithAgent
 } from '../services/ai';
-import { uploadImage } from '../services/storage';
 
 interface Message {
   id: number;
@@ -159,21 +158,8 @@ export default function AIChatWithImage() {
       setLoading(true);
       setError(null);
       
-      // Create a local data URL as fallback
-      const localImageUrl = uploadedImagePreview || '';
-      
-      // Try to upload the image first
-      let imageUrl = localImageUrl;
-      
-      try {
-        // Attempt to upload to Firebase Storage
-        imageUrl = await uploadImage(uploadedImage, `chat-images/${Date.now()}-${uploadedImage.name}`);
-        console.log('Successfully uploaded image to Firebase:', imageUrl);
-      } catch (uploadError) {
-        console.error('Firebase upload failed, using local data URL instead:', uploadError);
-        // Keep using the local image URL as fallback
-        setError('שגיאה בהעלאת התמונה למאגר, משתמש בגרסה מקומית במקום');
-      }
+      // Use the local data URL directly instead of uploading to Firebase
+      const imageUrl = uploadedImagePreview || '';
       
       // Add user message with image immediately
       const userMessage: Message = {
@@ -190,69 +176,37 @@ export default function AIChatWithImage() {
       setUploadedImage(null);
       setUploadedImagePreview(null);
       
-      // Use agent to get response
+      // Use agent to get response - pass the actual File object directly
       const apiMessages = formatMessagesForAPI();
       const { responseText, imageBlob } = await processWithAgent(apiMessages, imageCaption || 'Analyze this image', uploadedImage);
       
       // Add AI response
       if (imageBlob) {
-        // If there's an edited image, upload it
-        try {
-          const imageFile = new File([imageBlob], `edited-${Date.now()}.png`, { type: 'image/png' });
-          
-          // Create a local data URL for the edited image as fallback
-          let editedImageUrl = '';
-          const localReader = new FileReader();
-          await new Promise<void>((resolve) => {
-            localReader.onload = () => {
-              if (typeof localReader.result === 'string') {
-                editedImageUrl = localReader.result;
-              }
-              resolve();
-            };
-            localReader.readAsDataURL(imageFile);
-          });
-          
-          // Try Firebase upload but fall back to data URL if needed
-          try {
-            const uploadedUrl = await uploadImage(imageFile, `chat-images/edited-${Date.now()}.png`);
-            editedImageUrl = uploadedUrl; // Use Firebase URL if successful
-          } catch (firebaseError) {
-            console.error('Using local data URL for edited image due to Firebase error:', firebaseError);
-          }
-          
-          setMessages(prev => [
-            ...prev,
-            {
-              id: prev.length + 1,
-              role: 'assistant',
-              content: responseText,
-              image: editedImageUrl
+        // If there's an edited image, create a local data URL
+        const imageFile = new File([imageBlob], `edited-${Date.now()}.png`, { type: 'image/png' });
+        
+        // Create a data URL for the edited image
+        const editedImageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (typeof reader.result === 'string') {
+              resolve(reader.result);
+            } else {
+              resolve('');
             }
-          ]);
-        } catch (uploadError) {
-          console.error('Error uploading edited image:', uploadError);
-          
-          // Check if the error is related to the image content
-          let errorNote = "\n\n(הערה: התמונה המעודכנת לא הועלתה בהצלחה)";
-          if ((uploadError instanceof Error && 
-              (uploadError.message.includes('CORS') || 
-               uploadError.message.includes('access'))) || 
-              (typeof uploadError === 'string' && 
-               (uploadError.includes('CORS') || uploadError.includes('access')))) {
-            errorNote = "\n\n(הערה: לא ניתן לגשת לתמונה המעודכנת בשל הגבלות אבטחה. אנא נסה שוב)";
+          };
+          reader.readAsDataURL(imageFile);
+        });
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            role: 'assistant',
+            content: responseText,
+            image: editedImageUrl
           }
-          
-          // Still show the response text even if image upload fails
-          setMessages(prev => [
-            ...prev,
-            {
-              id: prev.length + 1,
-              role: 'assistant',
-              content: responseText + errorNote
-            }
-          ]);
-        }
+        ]);
       } else {
         // Just text response
         setMessages(prev => [
@@ -301,45 +255,32 @@ export default function AIChatWithImage() {
       const { responseText, imageBlob } = await processWithAgent(apiMessages, userInput);
       
       if (imageBlob) {
-        // AI generated an image in response
-        try {
-          // Upload the generated image
-          const imageFile = new File([imageBlob], `generated-${Date.now()}.png`, { type: 'image/png' });
-          const imageUrl = await uploadImage(imageFile, `chat-images/generated-${Date.now()}.png`);
-          
-          // Add the response with the image
-          setMessages(prevMessages => [
-            ...prevMessages,
-            {
-              id: prevMessages.length + 1,
-              role: 'assistant',
-              content: responseText,
-              image: imageUrl
+        // AI generated an image in response - create a data URL
+        const imageFile = new File([imageBlob], `generated-${Date.now()}.png`, { type: 'image/png' });
+        
+        // Create a data URL for the generated image
+        const imageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (typeof reader.result === 'string') {
+              resolve(reader.result);
+            } else {
+              resolve('');
             }
-          ]);
-        } catch (uploadError) {
-          console.error('Error uploading generated image:', uploadError);
-          
-          // Check if the error is related to the image content
-          let errorNote = "\n\n(הערה: התמונה לא הועלתה בהצלחה)";
-          if ((uploadError instanceof Error && 
-              (uploadError.message.includes('CORS') || 
-               uploadError.message.includes('access'))) || 
-              (typeof uploadError === 'string' && 
-               (uploadError.includes('CORS') || uploadError.includes('access')))) {
-            errorNote = "\n\n(הערה: לא ניתן לגשת לתמונה בשל הגבלות אבטחה. אנא נסה שוב)";
+          };
+          reader.readAsDataURL(imageFile);
+        });
+        
+        // Add the response with the image
+        setMessages(prevMessages => [
+          ...prevMessages,
+          {
+            id: prevMessages.length + 1,
+            role: 'assistant',
+            content: responseText,
+            image: imageUrl
           }
-          
-          // Still show the response text even if image upload fails
-          setMessages(prevMessages => [
-            ...prevMessages,
-            {
-              id: prevMessages.length + 1,
-              role: 'assistant',
-              content: responseText + errorNote
-            }
-          ]);
-        }
+        ]);
       } else {
         // Text-only response
         setMessages(prevMessages => [

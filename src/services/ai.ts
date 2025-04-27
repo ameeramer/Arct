@@ -1,6 +1,6 @@
-import { auth } from './firebase';
+import { auth, storage } from './firebase';
 import { generateImage as openaiGenerateImage, editImage as openaiEditImage } from './openai';
-import { downloadImageFromStorage } from './storage';
+import { ref, getDownloadURL } from 'firebase/storage';
 
 // Types for chat messages
 export interface ChatMessage {
@@ -306,6 +306,28 @@ async function safeImageFetch(url: string): Promise<Blob> {
     return imageCache.get(url)!;
   }
   
+  // Check if this is a data URL
+  if (url.startsWith('data:')) {
+    try {
+      // Extract the data part from data URL
+      const matches = url.match(/^data:(.+);base64,(.*)$/);
+      if (matches && matches.length === 3) {
+        const contentType = matches[1];
+        const base64Data = matches[2];
+        const binaryString = window.atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: contentType });
+        imageCache.set(url, blob);
+        return blob;
+      }
+    } catch (error) {
+      console.error('Error processing data URL:', error);
+    }
+  }
+  
   // Check if this is a Firebase Storage URL
   if (url.includes('firebasestorage.googleapis.com')) {
     console.log('Detected Firebase Storage URL, using Firebase Storage API');
@@ -323,7 +345,10 @@ async function safeImageFetch(url: string): Promise<Blob> {
         console.log('Accessing Firebase Storage path:', path);
         
         // Use our helper function to download the image
-        const blob = await downloadImageFromStorage(path);
+        const storageRef = ref(storage, path);
+        const downloadURL = await getDownloadURL(storageRef);
+        const response = await fetch(downloadURL, { mode: 'no-cors' });
+        const blob = await response.blob();
         imageCache.set(url, blob); // Cache with original URL
         return blob;
       }
