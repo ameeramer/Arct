@@ -228,14 +228,12 @@ export async function generateImage(
  * @param imageFile קובץ התמונה לעריכה
  * @param prompt תיאור השינויים הרצויים
  * @param params פרמטרים נוספים
- * @param maskFile קובץ מסכה אופציונלי (לעריכה חלקית)
  * @returns הבטחה שמחזירה Blob של התמונה שנוצרה
  */
 export async function editImage(
   imageFile: File | File[],
   prompt: string,
-  params: Partial<EditImageParams> = {},
-  maskFile?: File
+  params: Partial<EditImageParams> = {}
 ): Promise<Blob> {
   // בדיקת תקינות הפרמטרים
   if (!prompt) {
@@ -263,12 +261,6 @@ export async function editImage(
     const resizedImg = await resizeImageForOpenAI(imageFile);
     processedImages.push(resizedImg);
   }
-  
-  // טיפול במסכה אם קיימת
-  let processedMask: File | undefined;
-  if (maskFile) {
-    processedMask = await resizeImageForOpenAI(maskFile);
-  }
 
   try {
     // יצירת FormData לבקשה
@@ -280,11 +272,6 @@ export async function editImage(
     processedImages.forEach(img => {
       formData.append('image[]', img);
     });
-    
-    // הוספת המסכה אם קיימת
-    if (processedMask) {
-      formData.append('mask', processedMask);
-    }
     
     // הוספת פרמטרים אופציונליים
     if (params.size) {

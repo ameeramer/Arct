@@ -4,9 +4,7 @@ import { uploadImage } from '../services/storage';
 
 export default function ImagePlaygroundPage() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [uploadedMask, setUploadedMask] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [maskPreviewUrl, setMaskPreviewUrl] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [imageAction, setImageAction] = useState<'generate' | 'edit'>('generate');
@@ -34,22 +32,6 @@ export default function ImagePlaygroundPage() {
 
     setUploadedImage(file);
     setPreviewUrl(URL.createObjectURL(file));
-    setError(null);
-  };
-
-  // טיפול בהעלאת קובץ מסכה
-  const handleMaskFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // בדיקת סוג הקובץ
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file for the mask');
-      return;
-    }
-
-    setUploadedMask(file);
-    setMaskPreviewUrl(URL.createObjectURL(file));
     setError(null);
   };
 
@@ -94,8 +76,7 @@ export default function ImagePlaygroundPage() {
             quality: imageQuality,
             format: imageFormat,
             background: transparentBackground ? 'transparent' : 'opaque',
-          },
-          uploadedMask || undefined
+          }
         );
       }
 
@@ -222,71 +203,6 @@ export default function ImagePlaygroundPage() {
                           <p className="pl-1">or drag and drop</p>
                         </div>
                         <p className="text-xs text-gray-500">PNG, JPG, GIF up to 25MB</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* העלאת מסכה (אופציונלי במצב עריכה) */}
-            {imageAction === 'edit' && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Upload Mask (Optional)
-                </label>
-                <p className="text-xs text-gray-500 mb-2">
-                  The transparent areas of the mask will be replaced, while the filled areas will be left unchanged.
-                </p>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                  <div className="space-y-1 text-center">
-                    {maskPreviewUrl ? (
-                      <div>
-                        <img
-                          src={maskPreviewUrl}
-                          alt="Mask Preview"
-                          className="mx-auto h-32 w-auto"
-                        />
-                        <button
-                          onClick={() => {
-                            setUploadedMask(null);
-                            setMaskPreviewUrl(null);
-                          }}
-                          className="mt-2 text-sm text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <svg
-                          className="mx-auto h-12 w-12 text-gray-400"
-                          stroke="currentColor"
-                          fill="none"
-                          viewBox="0 0 48 48"
-                        >
-                          <path
-                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <div className="flex text-sm text-gray-600">
-                          <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none">
-                            <span>Upload a mask</span>
-                            <input
-                              id="mask-upload"
-                              name="mask-upload"
-                              type="file"
-                              className="sr-only"
-                              accept="image/*"
-                              onChange={handleMaskFileChange}
-                            />
-                          </label>
-                          <p className="pl-1">or drag and drop</p>
-                        </div>
-                        <p className="text-xs text-gray-500">PNG with transparency</p>
                       </>
                     )}
                   </div>
@@ -431,8 +347,6 @@ export default function ImagePlaygroundPage() {
                       if (imageAction === 'edit') {
                         setUploadedImage(null);
                         setPreviewUrl(null);
-                        setUploadedMask(null);
-                        setMaskPreviewUrl(null);
                       }
                       setGeneratedImageUrl(null);
                     }}
@@ -499,8 +413,7 @@ export default function ImagePlaygroundPage() {
             <div className="border border-gray-200 rounded-lg p-4">
               <h3 className="font-medium text-lg mb-2">Edit Images</h3>
               <p className="text-gray-600 text-sm">
-                Transform existing images using text prompts. You can also use a mask to specify which parts of the image
-                should be edited while leaving the rest unchanged.
+                Transform existing images using text prompts. Upload an image and describe how you want to modify it.
               </p>
             </div>
           </div>
