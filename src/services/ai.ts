@@ -568,6 +568,12 @@ export async function processWithAgent(
           return { responseText };
         }
         
+        // Skip blob URLs as they can't be processed by OpenAI
+        if (decision.imageReference.startsWith('blob:')) {
+          const responseText = `אני מצטער, לא ניתן לערוך את התמונה הזו. תמונות צריכות להיות בפורמט של data URL ולא blob URL.`;
+          return { responseText };
+        }
+        
         // Use our safe image fetcher to avoid CORS issues
         try {
           const blob = await safeImageFetch(decision.imageReference);
@@ -596,6 +602,13 @@ export async function processWithAgent(
       case 'chat_with_image_ref': {
         // Add a reference to the recent image in the conversation
         if (decision.imageReferenceIndex !== undefined && decision.imageReferenceIndex >= 0) {
+          // Check if the image is a blob URL
+          if (decision.imageReference && decision.imageReference.startsWith('blob:')) {
+            // Skip the image reference if it's a blob URL
+            const responseText = await chatWithGPT4o(updatedMessages);
+            return { responseText };
+          }
+          
           // Provide context about the image to the model
           const contextMessages = messages.slice(0, decision.imageReferenceIndex + 1);
           contextMessages.push(userMessage);

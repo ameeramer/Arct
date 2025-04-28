@@ -31,18 +31,28 @@ export default function AIChatWithImage() {
 
   // Convert our UI messages to the format expected by the OpenAI API
   const formatMessagesForAPI = (): ChatMessage[] => {
-    return messages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'assistant',
-      content: msg.image 
-        ? [
-            { type: 'text', text: msg.content } as ChatContent,
-            { 
-              type: 'image_url', 
-              image_url: { url: msg.image } 
-            } as ChatContent
-          ]
-        : msg.content
-    }));
+    return messages.map(msg => {
+      // Skip blob URLs - they can't be processed by OpenAI API
+      if (msg.image && msg.image.startsWith('blob:')) {
+        return {
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        };
+      }
+      
+      return {
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.image 
+          ? [
+              { type: 'text', text: msg.content } as ChatContent,
+              { 
+                type: 'image_url', 
+                image_url: { url: msg.image } 
+              } as ChatContent
+            ]
+          : msg.content
+      };
+    });
   };
 
   // Handle file upload
@@ -54,13 +64,23 @@ export default function AIChatWithImage() {
       setError(null);
       
       // Preprocess the image to ensure consistent format and size
-      // Using the canvas approach as in CompleteSignupPage
       const processedFile = await processImageLocally(file);
       setUploadedImage(processedFile);
       
-      // Create a preview URL
-      const previewUrl = URL.createObjectURL(processedFile);
-      setUploadedImagePreview(previewUrl);
+      // Create a preview URL - use data URL instead of blob URL for consistency
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            resolve('');
+          }
+        };
+        reader.readAsDataURL(processedFile);
+      });
+      
+      setUploadedImagePreview(dataUrl);
       
     } catch (err) {
       console.error('Error handling file upload:', err);
