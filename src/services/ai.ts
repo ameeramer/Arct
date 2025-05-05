@@ -1,5 +1,5 @@
 import { auth, storage } from './firebase';
-import { generateImage as openaiGenerateImage, editImage as openaiEditImage } from './openai';
+import { generateImage as openaiGenerateImage, editImage as openaiEditImage, createImageWithInspirationAndStructure } from './openai';
 import { ref, getDownloadURL } from 'firebase/storage';
 
 // Types for chat messages
@@ -31,21 +31,16 @@ interface ChatParams {
 }
 
 // Types for agent decisions
-export type AgentAction = 'chat' | 'generate_image' | 'edit_image' | 'chat_with_image_ref';
+export type AgentAction = 'chat' | 'generate_image' | 'edit_image' | 'chat_with_image_ref' | 'create_with_dual_images';
 export type AgentDecision = {
   action: AgentAction;
   prompt?: string;
   imageReference?: string;
   imageReferenceIndex?: number;
+  secondImageReference?: string;
+  secondImageReferenceIndex?: number;
   explanation?: string;
 };
-
-// Agent decision response structure
-interface AgentDecisionResponse {
-  action: AgentAction;
-  imageReferenceIndex?: number;
-  explanation: string;
-}
 
 // Function to chat with GPT-4o
 export async function chatWithGPT4o(
@@ -151,7 +146,8 @@ export async function imageToBase64(file: File): Promise<string> {
 export async function agentDecideAction(
   messages: ChatMessage[],
   currentInput: string,
-  hasUploadedImage: boolean = false
+  hasUploadedImage: boolean = false,
+  hasDualImages: boolean = false
 ): Promise<AgentDecision> {
   // Check if there are any images in recent messages (last 5)
   const recentImagesIndices: number[] = [];
@@ -188,11 +184,13 @@ Based on the user's message, decide what action I should take from the following
 2. "generate_image" - user wants me to create an image
 3. "edit_image" - user wants me to edit a previously shared image
 4. "chat_with_image_ref" - user is referring to a previous image but not asking for edits
+5. "create_with_dual_images" - user wants to create an image using two images: one for structure and one for style/inspiration
 
 ONLY return a JSON object with these fields:
 {
-  "action": "chat" | "generate_image" | "edit_image" | "chat_with_image_ref",
-  "imageReferenceIndex": number | null, (position of the referenced image in the conversation if applicable)
+  "action": "chat" | "generate_image" | "edit_image" | "chat_with_image_ref" | "create_with_dual_images",
+  "imageReferenceIndex": number | null, (position of the referenced structure image in the conversation if applicable)
+  "secondImageReferenceIndex": number | null, (position of the referenced inspiration image if using dual images)
   "explanation": "brief explanation of your decision"
 }
 
@@ -204,16 +202,22 @@ ${hasRecentImages && messages[latestImageIndex].role === 'assistant' ? '- The la
 ${hasRecentImages && messages[latestImageIndex].role === 'user' ? '- The latest image was uploaded by the user' : ''}
 - The user's input is in Hebrew or English
 ${hasUploadedImage ? '- The user has just uploaded a new image with this message' : ''}
+${hasDualImages ? '- The user has just uploaded two images with this message' : ''}
 
 If the user has just uploaded a new image:
-- If they're asking to describe/analyze the image: use "chat"
+- If they're asking to describe/analyze the image: use "chat_with_image_ref"
 - If they're asking to edit or modify the uploaded image: use "edit_image"
-- If they're just sharing an image with minimal text: use "chat"
+- If they're just sharing an image with minimal text: use "chat_with_image_ref"
+
+If the user has uploaded two images:
+- If they mention style transfer, inspiration, or applying the style of one image to another: use "create_with_dual_images"
+- In this case, assume the first image is the structure image and the second is the inspiration/style image
 
 When deciding if the user is referring to an image:
 - If they use phrases like "add to it", "modify it", "the image", etc., they are likely referring to the latest image
 - Pay special attention to the latest image in the conversation (assistant-generated or user-uploaded)
-- If the user says something like "add trees" after an image was shown, they probably want to edit that image`
+- If the user says something like "add trees" after an image was shown, they probably want to edit that image
+- If the user asks a question about the image or general questions about the image or what to do with it, use "chat_with_image_ref"`
   };
 
   // Send a request to GPT to decide what action to take
@@ -246,25 +250,31 @@ When deciding if the user is referring to an image:
     const decisionText = responseData.choices[0].message.content;
     
     try {
-      const decision: AgentDecisionResponse = JSON.parse(decisionText);
+      const decision: {
+        action: AgentAction;
+        imageReferenceIndex?: number;
+        secondImageReferenceIndex?: number;
+        explanation: string;
+      } = JSON.parse(decisionText);
+      
       console.log('Agent decision:', decision);
       
       // Extract the image reference if applicable
       let imageReference = '';
+      let secondImageReference = '';
       
       // Handle case where we need to look at latest image regardless of what agent decided
-      let imageReferenceIndex = decision.imageReferenceIndex;
+      let imageReferenceIndex = decision.imageReferenceIndex === null ? undefined : decision.imageReferenceIndex;
       
       // If the agent didn't specify an image index but we're editing or referring to an image, 
       // use the latest image
       if ((decision.action === 'edit_image' || decision.action === 'chat_with_image_ref') && 
-          (imageReferenceIndex === undefined || imageReferenceIndex === null) && 
+          imageReferenceIndex === undefined && 
           latestImageIndex >= 0) {
         imageReferenceIndex = latestImageIndex;
       }
       
       if (imageReferenceIndex !== undefined && 
-          imageReferenceIndex !== null && 
           imageReferenceIndex >= 0 && 
           imageReferenceIndex < messages.length) {
         
@@ -277,11 +287,29 @@ When deciding if the user is referring to an image:
         }
       }
       
+      // Handle the second image reference for dual image creation
+      let secondImageReferenceIndex = decision.secondImageReferenceIndex === null ? undefined : decision.secondImageReferenceIndex;
+      
+      if (secondImageReferenceIndex !== undefined && 
+          secondImageReferenceIndex >= 0 && 
+          secondImageReferenceIndex < messages.length) {
+        
+        const msg = messages[secondImageReferenceIndex];
+        if (Array.isArray(msg.content)) {
+          const imageContent = msg.content.find(item => item.type === 'image_url') as ImageContent;
+          if (imageContent) {
+            secondImageReference = imageContent.image_url.url;
+          }
+        }
+      }
+      
       return {
         action: decision.action,
         prompt: currentInput,
         imageReference,
         imageReferenceIndex,
+        secondImageReference,
+        secondImageReferenceIndex,
         explanation: decision.explanation
       };
     } catch (error) {
@@ -500,14 +528,63 @@ async function safeImageFetch(url: string): Promise<Blob> {
 export async function processWithAgent(
   messages: ChatMessage[],
   userInput: string,
-  uploadedImage?: File | null
+  uploadedImage?: File | null,
+  secondUploadedImage?: File | null
 ): Promise<{ responseText: string; imageBlob?: Blob }> {
-  // Get agent decision regardless of whether there's an uploaded image
-  const decision = await agentDecideAction(messages, userInput, !!uploadedImage);
+  // Get agent decision based on context
+  const decision = await agentDecideAction(
+    messages, 
+    userInput, 
+    !!uploadedImage, 
+    !!uploadedImage && !!secondUploadedImage
+  );
+  
   console.log('Agent decision with context:', decision);
   
-  // If there's an uploaded image
-  if (uploadedImage) {
+  // If there are two uploaded images for dual image creation
+  if (uploadedImage && secondUploadedImage) {
+    // Convert to base64 for the API
+    const base64Image1 = await imageToBase64(uploadedImage);
+    const base64Image2 = await imageToBase64(secondUploadedImage);
+    
+    // Add to user message
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: [
+        { type: 'text', text: userInput || 'Here are two images - one for structure and one for inspiration:' } as ChatContent,
+        { type: 'image_url', image_url: { url: base64Image1 } } as ChatContent,
+        { type: 'image_url', image_url: { url: base64Image2 } } as ChatContent
+      ]
+    };
+    
+    // Check the agent's decision
+    if (decision.action === 'create_with_dual_images') {
+      try {
+        // Create a new image using both structure and inspiration
+        const newImageBlob = await createImageWithInspirationAndStructure(
+          uploadedImage,
+          secondUploadedImage,
+          userInput
+        );
+        
+        const responseText = `הנה התמונה החדשה שיצרתי בהשראת התמונות שהעלית ולפי בקשתך: "${userInput}"`;
+        
+        return { responseText, imageBlob: newImageBlob };
+      } catch (error) {
+        console.error('Error creating image with dual images:', error);
+        // Fallback to chat if creation fails
+        const apiMessages = [...messages, userMessage];
+        const responseText = await chatWithGPT4o(apiMessages);
+        return { responseText };
+      }
+    } else {
+      // For chat or other actions with the uploaded images
+      const apiMessages = [...messages, userMessage];
+      const responseText = await chatWithGPT4o(apiMessages);
+      return { responseText };
+    }
+  } else if (uploadedImage) {
+    // Single image upload - existing logic
     // Convert to base64 for the API
     const base64Image = await imageToBase64(uploadedImage);
     
@@ -553,71 +630,48 @@ export async function processWithAgent(
     const updatedMessages = [...messages, userMessage];
     
     switch (decision.action) {
-      case 'generate_image': {
-        // Generate an image based on the prompt
-        const imageBlob = await openaiGenerateImage(userInput, { size: '1024x1024' });
-        const responseText = `הנה התמונה שיצרתי בהתאם לבקשתך: "${userInput}"`;
-        
-        return { responseText, imageBlob };
-      }
-      
-      case 'edit_image': {
-        if (!decision.imageReference) {
-          // Fallback to regular chat if no image reference
+      case 'create_with_dual_images': {
+        if (!decision.imageReference || !decision.secondImageReference) {
+          // Fallback to regular chat if no image references
           const responseText = await chatWithGPT4o(updatedMessages);
           return { responseText };
         }
         
         // Skip blob URLs as they can't be processed by OpenAI
-        if (decision.imageReference.startsWith('blob:')) {
-          const responseText = `אני מצטער, לא ניתן לערוך את התמונה הזו. תמונות צריכות להיות בפורמט של data URL ולא blob URL.`;
+        if (decision.imageReference.startsWith('blob:') || decision.secondImageReference.startsWith('blob:')) {
+          const responseText = `אני מצטער, לא ניתן לעבד את התמונות הללו. תמונות צריכות להיות בפורמט של data URL ולא blob URL.`;
           return { responseText };
         }
         
         // Use our safe image fetcher to avoid CORS issues
         try {
-          const blob = await safeImageFetch(decision.imageReference);
-          const file = new File([blob], 'reference-image.png', { type: blob.type || 'image/png' });
+          const structureBlob = await safeImageFetch(decision.imageReference);
+          const inspirationBlob = await safeImageFetch(decision.secondImageReference);
           
-          // Edit the image
+          const structureFile = new File([structureBlob], 'structure-image.png', { type: structureBlob.type || 'image/png' });
+          const inspirationFile = new File([inspirationBlob], 'inspiration-image.png', { type: inspirationBlob.type || 'image/png' });
+          
+          // Create new image with structure and inspiration
           try {
-            const editedBlob = await openaiEditImage(file, userInput);
-            const responseText = `הנה התמונה המעודכנת לפי בקשתך: "${userInput}"`;
+            const newImageBlob = await createImageWithInspirationAndStructure(
+              structureFile,
+              inspirationFile,
+              userInput
+            );
             
-            return { responseText, imageBlob: editedBlob };
-          } catch (editError) {
-            console.error('Error editing the image:', editError);
-            const responseText = `אני מצטער, לא הצלחתי לערוך את התמונה כפי שביקשת. 
-האם תוכל לנסח את הבקשה בצורה אחרת או להעלות תמונה אחרת?`;
+            const responseText = `הנה התמונה החדשה שיצרתי בהשראת התמונות שביקשת: "${userInput}"`;
+            
+            return { responseText, imageBlob: newImageBlob };
+          } catch (createError) {
+            console.error('Error creating image with dual images:', createError);
+            const responseText = `אני מצטער, לא הצלחתי ליצור תמונה חדשה כפי שביקשת. 
+האם תוכל לנסות שוב עם תמונות אחרות או לשנות את הבקשה?`;
             return { responseText };
           }
         } catch (error) {
-          console.error('Error fetching reference image:', error);
-          const responseText = `אני מצטער, לא הצלחתי לגשת לתמונה המקורית. ${error instanceof Error ? error.message : ''}
-האם תוכל להעלות אותה שוב?`;
-          return { responseText };
-        }
-      }
-      
-      case 'chat_with_image_ref': {
-        // Add a reference to the recent image in the conversation
-        if (decision.imageReferenceIndex !== undefined && decision.imageReferenceIndex >= 0) {
-          // Check if the image is a blob URL
-          if (decision.imageReference && decision.imageReference.startsWith('blob:')) {
-            // Skip the image reference if it's a blob URL
-            const responseText = await chatWithGPT4o(updatedMessages);
-            return { responseText };
-          }
-          
-          // Provide context about the image to the model
-          const contextMessages = messages.slice(0, decision.imageReferenceIndex + 1);
-          contextMessages.push(userMessage);
-          
-          const responseText = await chatWithGPT4o(contextMessages);
-          return { responseText };
-        } else {
-          // Fallback
-          const responseText = await chatWithGPT4o(updatedMessages);
+          console.error('Error fetching reference images:', error);
+          const responseText = `אני מצטער, לא הצלחתי לגשת לתמונות המקוריות. ${error instanceof Error ? error.message : ''}
+האם תוכל להעלות אותן שוב?`;
           return { responseText };
         }
       }

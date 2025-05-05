@@ -11,6 +11,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   image?: string;
+  secondImage?: string; // For dual image uploads
 }
 
 export default function AIChatWithImage() {
@@ -18,16 +19,46 @@ export default function AIChatWithImage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for primary uploaded image
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadedImagePreview, setUploadedImagePreview] = useState<string | null>(null);
+  
+  // State for dual image upload
+  const [dualImageMode, setDualImageMode] = useState(false);
+  const [structureImage, setStructureImage] = useState<File | null>(null);
+  const [structureImagePreview, setStructureImagePreview] = useState<string | null>(null);
+  const [inspirationImage, setInspirationImage] = useState<File | null>(null);
+  const [inspirationImagePreview, setInspirationImagePreview] = useState<string | null>(null);
+  
+  // הוספת state לשליטה בתפריט הנפתח
+  const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
+  
   const [imageCaption, setImageCaption] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const structureFileInputRef = useRef<HTMLInputElement>(null);
+  const inspirationFileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const uploadMenuRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+  
+  // הוספת מאזין אירועים לסגירת התפריט כשלוחצים מחוץ לו
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (uploadMenuRef.current && !uploadMenuRef.current.contains(event.target as Node)) {
+        setIsUploadMenuOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Convert our UI messages to the format expected by the OpenAI API
   const formatMessagesForAPI = (): ChatMessage[] => {
@@ -40,22 +71,32 @@ export default function AIChatWithImage() {
         };
       }
       
+      // Handle dual images case
+      if (msg.image && msg.secondImage) {
+        return {
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: [
+            { type: 'text', text: msg.content } as ChatContent,
+            { type: 'image_url', image_url: { url: msg.image } } as ChatContent,
+            { type: 'image_url', image_url: { url: msg.secondImage } } as ChatContent
+          ]
+        };
+      }
+      
+      // Handle single image case
       return {
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.image 
           ? [
               { type: 'text', text: msg.content } as ChatContent,
-              { 
-                type: 'image_url', 
-                image_url: { url: msg.image } 
-              } as ChatContent
+              { type: 'image_url', image_url: { url: msg.image } } as ChatContent
             ]
           : msg.content
       };
     });
   };
 
-  // Handle file upload
+  // Handle file upload for regular mode
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -89,6 +130,90 @@ export default function AIChatWithImage() {
       // Clear the file input
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  // Handle structure image upload for dual mode
+  const handleStructureImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setError(null);
+      
+      // Preprocess the image
+      const processedFile = await processImageLocally(file);
+      setStructureImage(processedFile);
+      
+      // Create a preview URL
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            resolve('');
+          }
+        };
+        reader.readAsDataURL(processedFile);
+      });
+      
+      setStructureImagePreview(dataUrl);
+      
+    } catch (err) {
+      console.error('Error handling structure image upload:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload structure image');
+    } finally {
+      if (structureFileInputRef.current) structureFileInputRef.current.value = '';
+    }
+  };
+
+  // Handle inspiration image upload for dual mode
+  const handleInspirationImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setError(null);
+      
+      // Preprocess the image
+      const processedFile = await processImageLocally(file);
+      setInspirationImage(processedFile);
+      
+      // Create a preview URL
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            resolve('');
+          }
+        };
+        reader.readAsDataURL(processedFile);
+      });
+      
+      setInspirationImagePreview(dataUrl);
+      
+    } catch (err) {
+      console.error('Error handling inspiration image upload:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload inspiration image');
+    } finally {
+      if (inspirationFileInputRef.current) inspirationFileInputRef.current.value = '';
+    }
+  };
+
+  // Cancel all uploaded images
+  const handleCancelImage = () => {
+    if (dualImageMode) {
+      setStructureImage(null);
+      setStructureImagePreview(null);
+      setInspirationImage(null);
+      setInspirationImagePreview(null);
+    } else {
+      setUploadedImage(null);
+      setUploadedImagePreview(null);
+    }
+    setImageCaption('');
   };
 
   // Process image locally before uploading
@@ -163,15 +288,103 @@ export default function AIChatWithImage() {
     });
   };
 
-  // Cancel uploading image
-  const handleCancelImage = () => {
-    setUploadedImage(null);
-    setUploadedImagePreview(null);
-    setImageCaption('');
+  // Handle sending a message with dual images (structure and inspiration)
+  const handleSendWithDualImages = async () => {
+    if (!structureImage || !inspirationImage) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get preview URLs
+      const structureUrl = structureImagePreview || '';
+      const inspirationUrl = inspirationImagePreview || '';
+      
+      // Add user message with both images immediately
+      const userMessage: Message = {
+        id: messages.length + 1,
+        role: 'user',
+        content: imageCaption || 'Here are my structure and inspiration images:',
+        image: structureUrl, // We'll show the structure image in the UI
+        secondImage: inspirationUrl // Custom field for display
+      };
+      
+      // Show user message immediately
+      setMessages([...messages, userMessage]);
+      
+      // Reset upload state
+      setStructureImage(null);
+      setStructureImagePreview(null);
+      setInspirationImage(null);
+      setInspirationImagePreview(null);
+      
+      // Use agent to get response - pass both image files
+      const apiMessages = formatMessagesForAPI();
+      const { responseText, imageBlob } = await processWithAgent(
+        apiMessages, 
+        imageCaption || 'Create a new image with the structure of the first image and the style of the second image', 
+        structureImage,
+        inspirationImage
+      );
+      
+      // Add AI response
+      if (imageBlob) {
+        // If there's a new generated image, create a local data URL
+        const imageFile = new File([imageBlob], `dual-image-${Date.now()}.png`, { type: 'image/png' });
+        
+        // Create a data URL for the new image
+        const newImageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (typeof reader.result === 'string') {
+              resolve(reader.result);
+            } else {
+              resolve('');
+            }
+          };
+          reader.readAsDataURL(imageFile);
+        });
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            role: 'assistant',
+            content: responseText,
+            image: newImageUrl
+          }
+        ]);
+      } else {
+        // Just text response
+        setMessages(prev => [
+          ...prev,
+          {
+            id: prev.length + 1,
+            role: 'assistant',
+            content: responseText
+          }
+        ]);
+      }
+      
+      // Reset caption and mode
+      setImageCaption('');
+      setDualImageMode(false);
+      
+    } catch (err) {
+      console.error('Error processing dual images:', err);
+      setError(err instanceof Error ? err.message : 'Failed to process images');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle sending a message with the uploaded image
+  // Handle sending a message with single uploaded image
   const handleSendWithImage = async () => {
+    if (dualImageMode) {
+      // Use the dual image function instead
+      return handleSendWithDualImages();
+    }
+    
     if (!uploadedImage) return;
     
     try {
@@ -354,6 +567,16 @@ export default function AIChatWithImage() {
                   />
                 </div>
               )}
+              {message.secondImage && (
+                <div className="mt-2">
+                  <img
+                    src={message.secondImage}
+                    alt="Second image"
+                    className="max-w-full rounded mt-2"
+                  />
+                  <div className="text-xs text-gray-400 mt-1">Inspiration image</div>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -374,8 +597,136 @@ export default function AIChatWithImage() {
         )}
       </div>
       
-      {/* Uploaded image preview and caption controls */}
-      {uploadedImagePreview && (
+      {/* Dual image mode - Structure and Inspiration images */}
+      {dualImageMode && (
+        <div className="border-t p-4 bg-gray-50">
+          <div className="flex flex-col space-y-3">
+            <div className="text-sm font-medium">הוסף תמונות לשילוב:</div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {/* Structure image */}
+              <div className="flex flex-col items-center">
+                <div className="text-xs font-medium mb-1">תמונת מבנה</div>
+                {structureImagePreview ? (
+                  <div className="relative">
+                    <img 
+                      src={structureImagePreview} 
+                      alt="Structure" 
+                      className="h-32 object-contain rounded-lg shadow-sm" 
+                    />
+                    <button
+                      onClick={() => {
+                        setStructureImage(null);
+                        setStructureImagePreview(null);
+                      }}
+                      className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => structureFileInputRef.current?.click()}
+                    className="h-32 w-full border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
+                  >
+                    <div className="text-center">
+                      <PhotoIcon className="mx-auto h-8 w-8 text-gray-400" />
+                      <span className="mt-1 text-xs text-gray-500">העלה תמונת מבנה</span>
+                    </div>
+                  </button>
+                )}
+                <input
+                  type="file"
+                  ref={structureFileInputRef}
+                  onChange={handleStructureImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+              
+              {/* Inspiration image */}
+              <div className="flex flex-col items-center">
+                <div className="text-xs font-medium mb-1">תמונת השראה</div>
+                {inspirationImagePreview ? (
+                  <div className="relative">
+                    <img 
+                      src={inspirationImagePreview} 
+                      alt="Inspiration" 
+                      className="h-32 object-contain rounded-lg shadow-sm" 
+                    />
+                    <button
+                      onClick={() => {
+                        setInspirationImage(null);
+                        setInspirationImagePreview(null);
+                      }}
+                      className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => inspirationFileInputRef.current?.click()}
+                    className="h-32 w-full border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
+                  >
+                    <div className="text-center">
+                      <PhotoIcon className="mx-auto h-8 w-8 text-gray-400" />
+                      <span className="mt-1 text-xs text-gray-500">העלה תמונת השראה</span>
+                    </div>
+                  </button>
+                )}
+                <input
+                  type="file"
+                  ref={inspirationFileInputRef}
+                  onChange={handleInspirationImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+            </div>
+            
+            {/* הצג תיבת הזנה וכפתור שליחה רק אם שתי התמונות הועלו */}
+            {structureImage && inspirationImage && (
+              <div>
+                <input
+                  type="text"
+                  value={imageCaption}
+                  onChange={(e) => setImageCaption(e.target.value)}
+                  placeholder="תאר כיצד ליצור תמונה חדשה בהשראת התמונות..."
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+            )}
+            
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  setDualImageMode(false);
+                  setStructureImage(null);
+                  setStructureImagePreview(null);
+                  setInspirationImage(null);
+                  setInspirationImagePreview(null);
+                }}
+                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+              >
+                ביטול
+              </button>
+              
+              {structureImage && inspirationImage && (
+                <button
+                  onClick={handleSendWithDualImages}
+                  className="px-3 py-1 bg-black text-white text-sm rounded-md"
+                >
+                  שלח
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Single uploaded image preview and caption controls */}
+      {!dualImageMode && uploadedImagePreview && (
         <div className="border-t p-4 bg-gray-50">
           <div className="flex flex-col space-y-3">
             <div className="text-sm font-medium">תמונה שהועלתה:</div>
@@ -417,16 +768,42 @@ export default function AIChatWithImage() {
       )}
       
       {/* Chat input */}
-      {!uploadedImagePreview && (
+      {!uploadedImagePreview && !structureImagePreview && !inspirationImagePreview && (
         <div className="p-4 border-t">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 text-gray-500 hover:text-gray-700"
-              title="Upload image"
-            >
-              <PhotoIcon className="h-5 w-5" />
-            </button>
+            <div className="relative" ref={uploadMenuRef}>
+              <button
+                onClick={() => setIsUploadMenuOpen(!isUploadMenuOpen)}
+                className="p-2 text-gray-500 hover:text-gray-700"
+                title="Upload image"
+              >
+                <PhotoIcon className="h-5 w-5" />
+              </button>
+              
+              {isUploadMenuOpen && (
+                <div className="absolute bottom-full mb-2 bg-white border rounded-md shadow-md p-2 w-64 z-10">
+                  <button 
+                    onClick={() => {
+                      setDualImageMode(false);
+                      fileInputRef.current?.click();
+                      setIsUploadMenuOpen(false);
+                    }}
+                    className="block w-full text-left p-3 mb-1 hover:bg-gray-100 rounded"
+                  >
+                    <span className="text-sm">העלאת תמונה בודדת</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setDualImageMode(true);
+                      setIsUploadMenuOpen(false);
+                    }}
+                    className="block w-full text-left p-3 hover:bg-gray-100 rounded"
+                  >
+                    <span className="text-sm">העלאת תמונת מבנה + השראה</span>
+                  </button>
+                </div>
+              )}
+            </div>
             
             <input
               type="file"
