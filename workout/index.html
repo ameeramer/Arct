@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>תוכנית אימונים A/B/C</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--text:#111827;--muted:#667085;--line:#d0d5dd;--dark:#111827;--ok:#ecfdf3;--soft:#f2f4f7;--tip:#fff7ed}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;line-height:1.5}
+.wrap{max-width:900px;margin:auto;padding:16px 14px 80px}.hero{background:var(--dark);color:#fff;border-radius:20px;padding:20px}.hero h1{margin:0 0 8px}.hero p{margin:4px 0;color:#e5e7eb}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0}.tabs button{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:900;font-size:16px}.tabs button.active{background:#111827;color:#fff}
+.info,.program{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px}.program{display:none}.program.active{display:block}.program h2{margin:0 0 10px}
+.exercise{border:1px solid var(--line);border-radius:15px;padding:14px;margin:12px 0;background:#fff}.exercise.done{background:var(--ok)}
+.head{display:flex;gap:12px;align-items:flex-start}.donebox{width:28px;height:28px;accent-color:#111827}.title{font-size:18px;font-weight:900}.meta{font-size:14px;color:var(--muted)}
+.sets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.set{background:var(--soft);border-radius:10px;padding:8px;text-align:center}.set label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}.set input{width:22px;height:22px;accent-color:#111827}
+.fields{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:10px}.fields input{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+details{margin-top:12px;border-top:1px solid #eee;padding-top:10px}summary{font-weight:900;cursor:pointer}.tip{background:var(--tip);padding:9px;border-radius:10px;margin-top:8px}.video{display:inline-block;margin-top:8px;font-weight:800;text-decoration:none}
+.save{background:#eef6ff;border:1px solid #b6d4fe;border-radius:14px;padding:12px;margin-top:14px;font-weight:800;color:#0f5132}
+.footer{position:fixed;left:0;right:0;bottom:0;background:rgba(244,246,248,.96);border-top:1px solid var(--line);padding:10px}.footer .in{max-width:900px;margin:auto;display:flex;gap:8px}.footer button{flex:1;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:900}
+@media(max-width:600px){.fields{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="hero">
+<h1>תוכנית אימונים 3 פעמים בשבוע</h1>
+<p><b>מטרה:</b> לבנות ולשמר שריר, לרדת בשומן ולהיות חטוב יותר.</p>
+<p><b>מבנה:</b> Full Body A / B / C עם יום מנוחה בין אימונים.</p>
+</section>
+<div id="saveState" class="save">✓ השמירה האוטומטית פעילה במכשיר הזה</div>
+<div class="tabs"><button data-tab="A" class="active">אימון A</button><button data-tab="B">אימון B</button><button data-tab="C">אימון C</button></div>
+<section class="info">
+<b>איך להשתמש:</b> סמן כל סט, רשום משקל וחזרות, ובסוף סמן את התרגיל. הנתונים נשמרים אוטומטית בדפדפן. כשאתה מגיע לקצה העליון של טווח החזרות בכל הסטים בטכניקה טובה, העלה מעט משקל.
+</section>
+<div id="programs"></div>
+</div>
+<div class="footer"><div class="in"><button id="resetChecks">אפס סימונים</button><button id="resetAll">אפס הכול</button></div></div>
+<script>
+const W={
+A:[
+["Leg Press","3×8–12","שב עם הגב צמוד למשענת, רגליים ברוחב נוח, הורד בשליטה ודחוף דרך כל כף הרגל.","אל תנעל ברכיים ואל תרים אגן מהמושב."],
+["Incline Dumbbell Press","3×6–10","כוון שיפוע מתון, שכמות אחורה ולמטה, הורד משקולות לצד החזה העליון ודחוף למעלה.","אל תפתח מרפקים לגמרי לצדדים."],
+["Lat Pulldown","3×8–12","משוך את המוט לכיוון החזה העליון תוך הורדת המרפקים מטה ולצדדים.","תחשוב שאתה מושך עם המרפקים."],
+["Romanian Deadlift","3×8–10","ברכיים מעט כפופות, דחוף אגן לאחור ושמור גב ניטרלי עד מתיחה בירך האחורית.","זו תנועת אגן, לא כפיפת גב."],
+["Lateral Raise","3×12–20","הרם ידיים לצדדים בשליטה עד בערך גובה כתפיים.","עדיף קל ונקי בלי תנופה."],
+["Biceps Curl","2×10–15","שמור מרפקים קרובים לגוף וכופף עד כיווץ מלא.","אל תניף את הגוף."],
+["Rope Triceps Pushdown","2×10–15","הצמד מרפקים לגוף ודחוף את החבל מטה עד כמעט יישור מלא.","הזרוע העליונה כמעט לא זזה."],
+["Reverse Crunch","3×10–15","שכב על הגב, כופף ברכיים וגלגל את האגן לכיוון הצלעות.","המטרה היא להרים מעט את האגן, לא רק את הרגליים."]
+],
+B:[
+["Hack Squat / Smith Squat","3×8–12","ירד בשליטה ודחוף דרך מרכז כף הרגל.","בחר עומק שבו הגב והברכיים יציבים."],
+["Machine Chest Press","3×8–12","כוון מושב כך שהידיות מול אמצע החזה, דחוף קדימה והחזר בשליטה.","שמור שכמות יציבות."],
+["Seated Cable Row","3×8–12","משוך את הידית לכיוון הבטן תוך קירוב שכמות ושמירה על חזה גבוה.","אל תזרוק את הגוף לאחור."],
+["Hip Thrust","3×8–12","דחוף אגן למעלה עד קו ישר כתפיים-אגן-ברכיים וסיים בכיווץ ישבן.","אל תקמר גב תחתון בסוף."],
+["Leg Curl","3×10–15","כופף ברכיים בשליטה עד כיווץ הירך האחורית והחזר לאט.","אל תרים אגן מהמושב."],
+["Shoulder Press","2×8–12","דחוף משקולות או ידיות מעל הראש בטווח נוח.","שמור צלעות למטה ואל תקמר גב."],
+["Hammer Curl","2×10–15","אחיזה ניטרלית כמו פטיש, כופף מרפקים בלי להזיז כתפיים.","בלי תנופה."],
+["Overhead Triceps Extension","2×10–15","החזק משקולת או חבל מעל הראש, כופף ויישר מרפקים.","שמור מרפקים יחסית צמודים."],
+["Ab Wheel Rollout","3×6–12","התחל על הברכיים, כווץ בטן וישבן, גלגל קדימה רק כל עוד הגב נשאר יציב וחזור.","עצור לפני שהגב התחתון שוקע לקשת."]
+],
+C:[
+["Bulgarian Split Squat","3×8–12 לכל רגל","רגל אחורית על ספסל, ירד אנכית ודחוף בעיקר מהרגל הקדמית.","שמור ברך קדמית בכיוון האצבעות."],
+["Flat Dumbbell Press","3×8–12","שמור שכמות אחורה, הורד משקולות לצד החזה ודחוף למעלה.","אל תיתן לכתפיים לעלות קדימה."],
+["Neutral-Grip Lat Pulldown / Assisted Pull-up","3×8–12","משוך מרפקים מטה ושמור חזה פתוח.","אל תמשוך בעיקר עם הידיים."],
+["Chest-Supported Row","3×8–12","חזה צמוד לתמיכה, משוך מרפקים לאחור וקבץ שכמות.","אל תרים כתפיים לאוזניים."],
+["Leg Extension","2×10–15","יישר ברכיים בשליטה וכיווץ בחלק העליון.","אל תזרוק את המשקל."],
+["Seated Leg Curl","2×10–15","כופף ברכיים ושלוט בחזרה.","שמור אגן צמוד למושב."],
+["Lateral Raise","3×12–20","הרם לצדדים עד בערך גובה כתף בשליטה.","בחר משקל שמאפשר תנועה נקייה."],
+["Biceps Curl","2×10–15","כופף מרפקים תוך שמירה על הזרוע העליונה יציבה.","אל תניף את הגוף."],
+["Triceps Pushdown","2×10–15","דחוף מטה עד כמעט יישור מלא וחזור בשליטה.","שמור מרפקים קרובים לגוף."],
+["Cable Crunch","3×10–15","כרע מול הכבל וכופף את הגו דרך הבטן.","אל תהפוך את התרגיל למשיכת ידיים."]
+]};
+const root=document.getElementById("programs");
+Object.entries(W).forEach(([name,items])=>{
+ const s=document.createElement("section");s.className="program"+(name==="A"?" active":"");s.dataset.program=name;s.innerHTML="<h2>אימון "+name+"</h2>";
+ items.forEach((e,i)=>{
+  const id=name+(i+1), q=encodeURIComponent(e[0]+" proper form");
+  const a=document.createElement("article");a.className="exercise";a.dataset.id=id;
+  a.innerHTML='<div class="head"><input class="donebox" type="checkbox"><div><div class="title">'+e[0]+'</div><div class="meta">'+e[1]+'</div></div></div>'+
+  '<div class="sets"><div class="set"><label>סט 1</label><input type="checkbox"></div><div class="set"><label>סט 2</label><input type="checkbox"></div><div class="set"><label>סט 3</label><input type="checkbox"></div></div>'+
+  '<div class="fields"><input placeholder="משקל בק״ג"><input placeholder="חזרות: 12/11/10"></div>'+
+  '<details><summary>איך לבצע נכון</summary><div>'+e[2]+'</div><div class="tip"><b>טיפ:</b> '+e[3]+'</div><a class="video" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query='+q+'">🎥 סרטון הדגמה</a></details>';
+  s.appendChild(a);
+ });root.appendChild(s);
+});
+let current=localStorage.getItem("workoutCurrent")||"A";
+function show(n){current=n;localStorage.setItem("workoutCurrent",n);document.querySelectorAll(".program").forEach(x=>x.classList.toggle("active",x.dataset.program===n));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===n))}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.tab));
+show(current);
+function key(ex,i,t){return "workout_"+ex.dataset.id+"_"+t+i}
+document.querySelectorAll(".exercise").forEach(ex=>{
+ const cs=[...ex.querySelectorAll('input[type="checkbox"]')], ts=[...ex.querySelectorAll('input:not([type="checkbox"])')];
+ cs.forEach((c,i)=>{c.checked=localStorage.getItem(key(ex,i,"c"))==="1";c.onchange=()=>{localStorage.setItem(key(ex,i,"c"),c.checked?"1":"0");ex.classList.toggle("done",cs[0].checked)}});
+ ts.forEach((x,i)=>{x.value=localStorage.getItem(key(ex,i,"t"))||"";x.oninput=()=>localStorage.setItem(key(ex,i,"t"),x.value)});
+ ex.classList.toggle("done",cs[0].checked);
+});
+document.getElementById("resetChecks").onclick=()=>{document.querySelectorAll('input[type="checkbox"]').forEach(c=>{c.checked=false;c.dispatchEvent(new Event("change"))})};
+document.getElementById("resetAll").onclick=()=>{if(confirm("לאפס את כל הנתונים?")){Object.keys(localStorage).filter(k=>k.startsWith("workout_")||k==="workoutCurrent").forEach(k=>localStorage.removeItem(k));location.reload()}};
+</script>
+</body>
+</html>
